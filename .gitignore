@@ -1,0 +1,124 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+*.local
+*.secret
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.venv/
+venv/
+env/
+ENV/
+backend/venv/
+pip-wheel-metadata/
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyre/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Node / frontend
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.npm/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Frontend build output
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+frontend/.nuxt/
+frontend/.svelte-kit/
+frontend/.vite/
+frontend/coverage/
+
+# Docker and local service state
+graph/neo4j_data/
+qdrant/storage/
+*.pid
+*.seed
+
+# Data, model, and generated artifacts
+data/**
+!data/
+!data/.gitkeep
+!data/README.md
+models/
+checkpoints/
+artifacts/
+outputs/
+runs/
+wandb/
+mlruns/
+*.sqlite
+*.sqlite3
+*.db
+*.parquet
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.onnx
+*.pt
+*.pth
+*.ckpt
+
+# Logs and temporary files
+logs/
+*.log
+tmp/
+temp/
+.cache/
+.sass-cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Test and coverage reports
+coverage/
+.nyc_output/
+junit.xml
+test-results/
+playwright-report/
+
+# TypeScript / JavaScript caches
+*.tsbuildinfo
+.eslintcache
+
