@@ -1,0 +1,38 @@
+node_id,node_type,name,description,grade,difficulty,formula
+grade_p1,Grade,"Primary 1","Primary school grade one",1,,
+grade_p2,Grade,"Primary 2","Primary school grade two",2,,
+grade_p3,Grade,"Primary 3","Primary school grade three",3,,
+grade_p4,Grade,"Primary 4","Primary school grade four",4,,
+grade_p5,Grade,"Primary 5","Primary school grade five",5,,
+grade_p6,Grade,"Primary 6","Primary school grade six",6,,
+grade_p7,Grade,"Primary 7","Primary school grade seven",7,,
+topic_counting,Topic,"Counting","Reading and arranging whole numbers in order",1,beginner,
+topic_addition,Topic,"Addition","Combining quantities to find a total",1,beginner,"a + b = c"
+topic_subtraction,Topic,"Subtraction","Finding how many remain or finding the difference",1,beginner,"a - b = c"
+topic_multiplication,Topic,"Multiplication","Combining equal groups using repeated addition",2,beginner,"a × b = c"
+topic_division,Topic,"Division","Sharing a quantity equally or making equal groups",2,intermediate,"a ÷ b = c"
+topic_fractions,Topic,"Fractions","Describing equal parts of one whole or one group",3,intermediate,"part / whole"
+topic_decimals,Topic,"Decimals","Writing fractions with denominators based on ten",4,intermediate,"place value"
+topic_percentages,Topic,"Percentages","Describing a quantity as parts out of one hundred",5,intermediate,"part / whole × 100%"
+topic_ratio,Topic,"Ratio","Comparing two quantities of the same kind",6,advanced,"a:b"
+topic_equations,Topic,"Simple Equations","Finding an unknown while keeping both sides equal",7,advanced,"a + x = b"
+concept_counting,Concept,"One-to-one counting","Match one number word to each object",1,beginner,
+concept_addition,Concept,"Joining quantities","Combine groups and count the total",1,beginner,
+concept_subtraction,Concept,"Taking away","Remove a quantity and count what remains",1,beginner,
+concept_multiplication,Concept,"Equal groups","Represent repeated equal groups",2,beginner,
+concept_division,Concept,"Equal sharing","Share a quantity into equal groups",2,intermediate,
+concept_fractions,Concept,"Equal parts","Divide a whole into equal-sized parts",3,intermediate,
+concept_decimals,Concept,"Decimal place value","Read tenths and hundredths by place",4,intermediate,
+concept_percentages,Concept,"Parts per hundred","Interpret percent as a fraction of one hundred",5,intermediate,
+concept_ratio,Concept,"Ordered comparison","Compare quantities in a stated order",6,advanced,
+concept_equations,Concept,"Equation balance","Apply the same operation to both sides",7,advanced,
+example_counting,Example,"Count five objects","Touch each of five objects once while counting to five",1,beginner,"1 2 3 4 5"
+example_addition,Example,"Add two and three","Start at two and count on three to reach five",1,beginner,"2 + 3 = 5"
+example_subtraction,Example,"Subtract two from seven","Remove two counters from seven and count five remaining",1,beginner,"7 - 2 = 5"
+example_multiplication,Example,"Three groups of four","Add four three times to make twelve",2,beginner,"3 × 4 = 12"
+example_division,Example,"Share twelve among three","Each of three groups receives four",2,intermediate,"12 ÷ 3 = 4"
+example_fractions,Example,"One quarter shaded","One of four equal parts is shaded",3,intermediate,"1/4"
+example_decimals,Example,"Twenty-five hundredths","Two tenths and five hundredths make twenty-five hundredths",4,intermediate,"0.25"
+example_percentages,Example,"Twenty-five percent of forty","One quarter of forty is ten",5,intermediate,"25/100 × 40 = 10"
+example_ratio,Example,"Red to blue beads","Two red beads and three blue beads form a two-to-three ratio",6,advanced,"2:3"
+example_equations,Example,"Solve x plus four","Subtract four from both sides to find five",7,advanced,"x + 4 = 9"

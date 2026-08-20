@@ -1,10 +1,11 @@
+import os
 from typing import Any
 
 import requests
 import streamlit as st
 
-
-API_URL = "http://127.0.0.1:8000"
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000").rstrip("/")
+REQUEST_TIMEOUT = float(os.getenv("TUTOR_REQUEST_TIMEOUT", "330"))
 
 
 st.set_page_config(
@@ -28,7 +29,7 @@ def ask_tutor(
             "learner_grade": learner_grade,
             "result_limit": result_limit,
         },
-        timeout=600,
+        timeout=REQUEST_TIMEOUT,
     )
 
     try:
@@ -142,95 +143,94 @@ if question:
     with st.chat_message("user"):
         st.markdown(question)
 
-    with st.chat_message("assistant"):
-        with st.spinner(
-            "Searching the curriculum and preparing an explanation..."
-        ):
-            try:
-                result = ask_tutor(
-                    question=question,
-                    learner_grade=learner_grade,
-                    result_limit=result_limit,
-                )
+    with st.chat_message("assistant"), st.spinner(
+        "Searching the curriculum and preparing an explanation..."
+    ):
+        try:
+            result = ask_tutor(
+                question=question,
+                learner_grade=learner_grade,
+                result_limit=result_limit,
+            )
 
-                answer = result.get(
-                    "answer",
-                    "I could not generate an answer.",
-                )
+            answer = result.get(
+                "answer",
+                "I could not generate an answer.",
+            )
 
-                st.markdown(answer)
+            st.markdown(answer)
 
-                st.session_state.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": answer,
-                        "metadata": {
-                            "detected_topic": result.get(
-                                "detected_topic"
-                            ),
-                            "graph_context": result.get(
-                                "graph_context"
-                            ),
-                            "retrieved_materials": result.get(
-                                "retrieved_materials",
-                                [],
-                            ),
-                        },
-                    }
-                )
-
-                if show_sources:
-                    with st.expander("View curriculum sources"):
-                        if result.get("detected_topic"):
-                            st.write(
-                                "**Detected topic:** "
-                                f"{result['detected_topic']}"
-                            )
-
-                        if result.get("graph_context"):
-                            st.write("### Knowledge graph context")
-                            st.json(result["graph_context"])
-
-                        materials = result.get(
+            st.session_state.messages.append(
+                {
+                    "role": "assistant",
+                    "content": answer,
+                    "metadata": {
+                        "detected_topic": result.get(
+                            "detected_topic"
+                        ),
+                        "graph_context": result.get(
+                            "graph_context"
+                        ),
+                        "retrieved_materials": result.get(
                             "retrieved_materials",
                             [],
+                        ),
+                    },
+                }
+            )
+
+            if show_sources:
+                with st.expander("View curriculum sources"):
+                    if result.get("detected_topic"):
+                        st.write(
+                            "**Detected topic:** "
+                            f"{result['detected_topic']}"
                         )
 
-                        if materials:
+                    if result.get("graph_context"):
+                        st.write("### Knowledge graph context")
+                        st.json(result["graph_context"])
+
+                    materials = result.get(
+                        "retrieved_materials",
+                        [],
+                    )
+
+                    if materials:
+                        st.write(
+                            "### Retrieved learning materials"
+                        )
+
+                        for material in materials:
                             st.write(
-                                "### Retrieved learning materials"
+                                f"**{material.get('title')}**"
+                            )
+                            st.write(
+                                material.get("content", "")
+                            )
+                            st.caption(
+                                f"Topic: "
+                                f"{material.get('topic')} | "
+                                f"Score: "
+                                f"{material.get('score')}"
                             )
 
-                            for material in materials:
-                                st.write(
-                                    f"**{material.get('title')}**"
-                                )
-                                st.write(
-                                    material.get("content", "")
-                                )
-                                st.caption(
-                                    f"Topic: "
-                                    f"{material.get('topic')} | "
-                                    f"Score: "
-                                    f"{material.get('score')}"
-                                )
+        except requests.ConnectionError:
+            st.error(
+                "The FastAPI backend is not running. "
+                "Start it using uvicorn backend.main:app --reload."
+            )
 
-            except requests.ConnectionError:
-                st.error(
-                    "The FastAPI backend is not running. "
-                    "Start it using uvicorn main:app --reload."
-                )
+        except requests.Timeout:
+            st.error(
+                "The model took too long to respond. "
+                "Check that the Ollama container is running."
+            )
 
-            except requests.Timeout:
-                st.error(
-                    "The model took too long to respond. "
-                    "Check that the Ollama container is running."
-                )
+        except RuntimeError as error:
+            st.error(str(error))
 
-            except RuntimeError as error:
-                st.error(str(error))
-
-            except requests.RequestException as error:
-                st.error(
-                    f"Could not communicate with the backend: {error}"
-                )
+        except requests.RequestException as error:
+            st.error(
+                f"Could not communicate with the backend: {error}"
+            )

@@ -36,3 +36,27 @@ def test_learning_material_ids_are_unique():
     identifiers = [row["id"] for row in read_rows("learning_materials.csv")]
 
     assert len(identifiers) == len(set(identifiers))
+
+
+def test_advanced_graph_relationships_reference_known_nodes():
+    nodes = read_rows("graph_nodes.csv")
+    relationships = read_rows("graph_relationships.csv")
+    node_ids = {node["node_id"] for node in nodes}
+
+    assert len(node_ids) == len(nodes)
+    assert all(row["source_id"] in node_ids for row in relationships)
+    assert all(row["target_id"] in node_ids for row in relationships)
+
+
+def test_advanced_graph_contains_every_curriculum_topic():
+    curriculum_topics = {
+        row["topic"]
+        for row in read_rows("curriculum.csv")
+    }
+    graph_topics = {
+        row["name"]
+        for row in read_rows("graph_nodes.csv")
+        if row["node_type"] == "Topic"
+    }
+
+    assert graph_topics == curriculum_topics

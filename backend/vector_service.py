@@ -11,6 +11,7 @@ from sentence_transformers import SentenceTransformer
 load_dotenv()
 
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+QDRANT_TIMEOUT = float(os.getenv("QDRANT_TIMEOUT", "60"))
 COLLECTION_NAME = "math_learning_materials"
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 MINIMUM_RELEVANCE_SCORE = float(os.getenv("MINIMUM_RELEVANCE_SCORE", "0.35"))
@@ -23,7 +24,7 @@ DEFAULT_MATERIALS_PATH = (
 # all-MiniLM-L6-v2 generates vectors with 384 dimensions.
 VECTOR_SIZE = 384
 
-client = QdrantClient(url=QDRANT_URL)
+client = QdrantClient(url=QDRANT_URL, timeout=QDRANT_TIMEOUT)
 
 
 @lru_cache(maxsize=1)
