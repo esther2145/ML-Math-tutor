@@ -65,10 +65,7 @@ qdrant/storage/
 *.seed
 
 # Data, model, and generated artifacts
-data/**
-!data/
-!data/.gitkeep
-!data/README.md
+
 models/
 checkpoints/
 artifacts/
