@@ -1,0 +1,11 @@
+id,topic,grade,title,content
+1,Counting,1,"Counting objects","Count each object once. Say the number names in order. The last number said tells how many objects there are."
+2,Addition,1,"Joining groups","Addition joins quantities. For 2 + 3, start with 2 and count on three steps: 3, 4, 5. Therefore 2 + 3 = 5."
+3,Subtraction,1,"Taking away","Subtraction can show what remains. If you have 7 counters and remove 2, count the 5 counters left. Therefore 7 - 2 = 5."
+4,Multiplication,2,"Equal groups","Multiplication describes equal groups. Three groups of 4 contain 4 + 4 + 4 = 12 objects, so 3 x 4 = 12."
+5,Division,2,"Sharing equally","Division shares or groups equally. Sharing 12 objects among 3 learners gives 4 objects to each learner, so 12 / 3 = 4."
+6,Fractions,3,"Equal parts","A fraction describes equal parts. If a shape is divided into 4 equal parts and 1 part is shaded, the shaded fraction is 1/4."
+7,Decimals,4,"Tenths and hundredths","The first digit after the decimal point represents tenths. The second represents hundredths. Thus 0.25 means 2 tenths and 5 hundredths."
+8,Percentages,5,"Parts out of one hundred","Percent means out of 100. To find 25% of 40, calculate 25/100 x 40 = 10."
+9,Ratio,6,"Comparing quantities","A ratio compares quantities in the same order. If there are 2 red beads and 3 blue beads, the ratio of red to blue is 2:3."
+10,Simple Equations,7,"Keeping equations balanced","An equation stays balanced when the same operation is performed on both sides. For x + 4 = 9, subtract 4 from both sides to get x = 5."

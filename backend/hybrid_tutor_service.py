@@ -1,8 +1,9 @@
 from typing import Any
 
-from graph_service import get_topic_details
-from ollama_service import generate_response
-from vector_service import search_materials
+from .graph_service import get_topic_details
+from .math_service import build_calculation_answer, solve_arithmetic_question
+from .ollama_service import generate_response
+from .vector_service import search_materials
 
 
 def build_graph_context(topic: dict[str, Any] | None) -> str:
@@ -72,9 +73,23 @@ def answer_math_question(
     then generate a grounded answer using Ollama.
     """
 
+    verified_calculation = solve_arithmetic_question(question)
+
+    if verified_calculation is not None:
+        return {
+            "question": question,
+            "learner_grade": learner_grade or 3,
+            "detected_topic": verified_calculation.topic,
+            "graph_context": None,
+            "retrieved_materials": [],
+            "verified_calculation": verified_calculation.to_dict(),
+            "answer": build_calculation_answer(verified_calculation),
+        }
+
     materials = search_materials(
         question=question,
         limit=result_limit,
+        learner_grade=learner_grade,
     )
 
     # Use the highest-ranked Qdrant result to identify the likely topic.
@@ -139,5 +154,6 @@ INSTRUCTIONS
         "detected_topic": detected_topic,
         "graph_context": graph_topic,
         "retrieved_materials": materials,
+        "verified_calculation": None,
         "answer": answer,
     }

@@ -1,4 +1,21 @@
 services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USERNAME: ${NEO4J_USERNAME:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?Set NEO4J_PASSWORD in .env}
+      QDRANT_URL: http://qdrant:6333
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+      MINIMUM_RELEVANCE_SCORE: ${MINIMUM_RELEVANCE_SCORE:-0.35}
+    depends_on:
+      - neo4j
+      - qdrant
+      - ollama
+
   neo4j:
     image: neo4j:5
     container_name: graft_neo4j
@@ -6,7 +23,7 @@ services:
       - "7474:7474"
       - "7687:7687"
     environment:
-      NEO4J_AUTH: neo4j/graftpassword
+      NEO4J_AUTH: ${NEO4J_USERNAME:-neo4j}/${NEO4J_PASSWORD:?Set NEO4J_PASSWORD in .env}
     volumes:
       - ./graph/neo4j_data:/data
 

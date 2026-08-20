@@ -1,5 +1,5 @@
-from graph_service import get_topic_details
-from ollama_service import generate_response
+from .graph_service import get_topic_details
+from .ollama_service import generate_response
 
 
 def explain_topic(topic_name: str, learner_grade: int | None = None):
