@@ -11,6 +11,13 @@ from vector_service import (
     test_qdrant_connection,
 )
 from hybrid_tutor_service import answer_math_question
+from advanced_graph_loader import load_complete_graph
+from graph_service import (
+    get_prerequisite_path,
+    get_topic_details,
+    search_topics,
+)
+
 
 
 app = FastAPI(
@@ -34,6 +41,9 @@ class TutorQuestionRequest(BaseModel):
     learner_grade: int | None = None
     result_limit: int = 3
 
+class GraphSearchRequest(BaseModel):
+    search_text: str
+    limit: int = 10
 
 
 @app.get("/")
@@ -247,6 +257,64 @@ def ask_tutor(request: TutorQuestionRequest):
             detail=f"The tutor could not answer the question: {error}",
         )
 
+@app.post("/graph/load-complete")
+def load_complete_knowledge_graph():
+    try:
+        result = load_complete_graph()
 
+        return {
+            "message": "Knowledge graph loaded successfully.",
+            **result,
+        }
 
+    except (FileNotFoundError, ValueError) as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
 
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Knowledge graph loading failed: {error}",
+        )
+@app.get("/graph/topic/{topic_name}")
+def graph_topic_details(topic_name: str):
+    topic = get_topic_details(topic_name)
+
+    if topic is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Topic '{topic_name}' was not found.",
+        )
+
+    topic["prerequisite_path"] = get_prerequisite_path(
+        topic_name
+    )
+
+    return topic
+
+@app.post("/graph/search")
+def graph_search(request: GraphSearchRequest):
+    if not request.search_text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Search text cannot be empty.",
+        )
+
+    if request.limit < 1 or request.limit > 50:
+        raise HTTPException(
+            status_code=400,
+            detail="Search limit must be between 1 and 50.",
+        )
+
+    results = search_topics(
+        search_text=request.search_text.strip(),
+        limit=request.limit,
+    )
+
+    return {
+        "search_text": request.search_text,
+        "number_of_results": len(results),
+        "results": results,
+    }
