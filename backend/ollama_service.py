@@ -46,7 +46,7 @@ def generate_response(prompt: str) -> str:
         "prompt": prompt,
         "stream": False,
         "options": {
-            "num_predict": 150,
+            "num_predict": 80,
             "temperature": 0.2
         }
     }

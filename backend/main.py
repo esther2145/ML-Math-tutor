@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from .advanced_graph_loader import load_complete_graph
 from .database import create_basic_math_graph, test_connection
 from .graph_loader import load_curriculum_to_graph
 from .graph_service import (
@@ -262,11 +263,32 @@ def graph_topic_details(topic_name: str):
             detail=f"Topic '{topic_name}' was not found.",
         )
 
-    topic["prerequisite_path"] = get_prerequisite_path(
-        topic_name
-    )
+    topic["prerequisite_path"] = get_prerequisite_path(topic_name)
 
     return topic
+
+@app.post("/graph/load-complete")
+def load_complete_knowledge_graph():
+    try:
+        result = load_complete_graph()
+
+        return {
+            "message": "Knowledge graph loaded successfully.",
+            **result,
+        }
+
+    except (FileNotFoundError, ValueError) as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Knowledge graph loading failed: {error}",
+        ) from error
+
 
 @app.post("/graph/search")
 def graph_search(request: GraphSearchRequest):
@@ -275,7 +297,6 @@ def graph_search(request: GraphSearchRequest):
             status_code=400,
             detail="Search text cannot be empty.",
         )
-
     if request.limit < 1 or request.limit > 50:
         raise HTTPException(
             status_code=400,
