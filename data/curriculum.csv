@@ -1,0 +1,14 @@
+topic,description,grade,difficulty,formula,prerequisite
+Numbers,Basic counting and understanding numbers,1,Easy,,
+Addition,Combining two or more numbers to get a total,1,Easy,a + b,Numbers
+Subtraction,Taking one number away from another,1,Easy,a - b,Numbers
+Multiplication,Repeated addition of the same number,2,Easy,a × b,Addition
+Division,Sharing a number into equal groups,2,Medium,a ÷ b,Multiplication
+Fractions,Parts of a whole number,3,Medium,a/b,Division
+Decimals,Numbers with a decimal point,4,Medium,,
+Percentages,Parts out of one hundred,5,Medium,x%,Fractions
+Ratios,Comparing two quantities,5,Medium,a:b,Division
+Area,The amount of space inside a shape,4,Medium,length × width,Multiplication
+Perimeter,The distance around a shape,3,Easy,add all sides,Addition
+Triangles,Shapes with three sides,4,Medium,,
+Rectangles,Shapes with four sides and equal opposite sides,3,Easy,,

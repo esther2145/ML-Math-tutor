@@ -1,0 +1,69 @@
+node_id,node_type,name,description,grade,difficulty,formula
+G1,Grade,Primary 1,First level of primary mathematics,1,,
+G2,Grade,Primary 2,Second level of primary mathematics,2,,
+G3,Grade,Primary 3,Third level of primary mathematics,3,,
+G4,Grade,Primary 4,Fourth level of primary mathematics,4,,
+G5,Grade,Primary 5,Fifth level of primary mathematics,5,,
+T001,Topic,Numbers,Understanding numbers and quantities,1,Easy,
+T002,Topic,Addition,Combining quantities to find a total,1,Easy,a + b
+T003,Topic,Subtraction,Taking one quantity away from another,1,Easy,a - b
+T004,Topic,Multiplication,Repeated addition and equal groups,2,Easy,a × b
+T005,Topic,Division,Sharing or grouping quantities equally,2,Medium,a ÷ b
+T006,Topic,Fractions,Representing equal parts of a whole,3,Medium,a/b
+T007,Topic,Decimals,Representing whole numbers and parts using decimal notation,4,Medium,
+T008,Topic,Percentages,Representing a quantity out of one hundred,5,Medium,x%
+T009,Topic,Ratios,Comparing two or more quantities,5,Medium,a:b
+T010,Topic,Geometry,Study of shapes sizes positions and space,3,Medium,
+T011,Topic,Measurement,Determining length mass capacity time and other quantities,2,Medium,
+T012,Topic,Area,Measuring the space inside a two-dimensional shape,4,Medium,length × width
+T013,Topic,Perimeter,Measuring the total distance around a shape,3,Easy,sum of all sides
+T014,Topic,Time,Reading clocks and measuring duration,2,Easy,
+T015,Topic,Money,Recognising and calculating with currency,2,Easy,
+T016,Topic,Data Handling,Collecting organising and interpreting data,3,Medium,
+T017,Topic,Patterns,Recognising and extending mathematical sequences,2,Easy,
+T018,Topic,Place Value,Understanding the value of digits by position,1,Easy,
+T019,Topic,Whole Numbers,Numbers without fractions or decimals,1,Easy,
+T020,Topic,Word Problems,Applying mathematics to real situations,2,Medium,
+S001,Subtopic,Counting,Reciting and identifying numbers in order,1,Easy,
+S002,Subtopic,Number Comparison,Comparing greater than less than and equal values,1,Easy,
+S003,Subtopic,Addition Without Regrouping,Adding numbers without carrying,1,Easy,
+S004,Subtopic,Addition With Regrouping,Adding numbers using carrying,2,Medium,
+S005,Subtopic,Subtraction Without Regrouping,Subtracting numbers without borrowing,1,Easy,
+S006,Subtopic,Subtraction With Regrouping,Subtracting numbers using borrowing,2,Medium,
+S007,Subtopic,Multiplication Tables,Learning basic multiplication facts,2,Easy,
+S008,Subtopic,Equal Groups,Representing multiplication using groups,2,Easy,
+S009,Subtopic,Sharing Division,Dividing a quantity by sharing equally,2,Easy,
+S010,Subtopic,Grouping Division,Finding how many equal groups can be formed,2,Medium,
+S011,Subtopic,Unit Fractions,Fractions with numerator one,3,Easy,
+S012,Subtopic,Equivalent Fractions,Fractions that represent the same amount,4,Medium,
+S013,Subtopic,Comparing Fractions,Determining which fraction is larger or smaller,4,Medium,
+S014,Subtopic,Decimal Place Value,Understanding tenths hundredths and thousandths,4,Medium,
+S015,Subtopic,Fraction to Decimal,Converting fractions into decimal form,5,Medium,
+S016,Subtopic,Percentage of a Quantity,Finding a percentage of a given number,5,Medium,
+S017,Subtopic,Rectangle Area,Finding the area of a rectangle,4,Easy,length × width
+S018,Subtopic,Triangle Area,Finding the area of a triangle,5,Medium,1/2 × base × height
+S019,Subtopic,Rectangle Perimeter,Finding the distance around a rectangle,3,Easy,2 × (length + width)
+S020,Subtopic,Bar Graphs,Representing data using rectangular bars,3,Easy,
+C001,Concept,Digit,A single symbol used to write numbers,1,Easy,
+C002,Concept,Place,A position occupied by a digit in a number,1,Easy,
+C003,Concept,Sum,The result obtained after addition,1,Easy,
+C004,Concept,Difference,The result obtained after subtraction,1,Easy,
+C005,Concept,Product,The result obtained after multiplication,2,Easy,
+C006,Concept,Quotient,The result obtained after division,2,Medium,
+C007,Concept,Numerator,The top number in a fraction,3,Easy,
+C008,Concept,Denominator,The bottom number in a fraction,3,Easy,
+C009,Concept,Whole,A complete object or quantity,1,Easy,
+C010,Concept,Length,The measurement from one end to another,2,Easy,
+C011,Concept,Width,The measurement across an object,2,Easy,
+C012,Concept,Equal,Having the same value or amount,1,Easy,
+C013,Concept,Greater Than,A value larger than another value,1,Easy,
+C014,Concept,Less Than,A value smaller than another value,1,Easy,
+C015,Concept,Remainder,The amount left after division,3,Medium,
+F001,Formula,Rectangle Area Formula,Formula used to calculate rectangle area,4,Easy,A = l × w
+F002,Formula,Rectangle Perimeter Formula,Formula used to calculate rectangle perimeter,3,Easy,P = 2(l + w)
+F003,Formula,Triangle Area Formula,Formula used to calculate triangle area,5,Medium,A = 1/2 × b × h
+E001,Example,Two Plus Three,Two objects combined with three objects make five,1,Easy,2 + 3 = 5
+E002,Example,Four Groups of Two,Four equal groups containing two items make eight,2,Easy,4 × 2 = 8
+E003,Example,Twelve Shared by Three,Twelve items shared equally among three groups gives four,2,Easy,12 ÷ 3 = 4
+E004,Example,One Half of Eight,One of two equal parts of eight is four,3,Easy,1/2 × 8 = 4
+E005,Example,Rectangle Five by Three,A rectangle of length five and width three has area fifteen,4,Easy,5 × 3 = 15
