@@ -1,8 +1,17 @@
+from pathlib import Path
+
 import pandas as pd
-from database import driver
+
+from .database import driver
+
+DEFAULT_CURRICULUM_PATH = (
+    Path(__file__).resolve().parent.parent / "data" / "curriculum.csv"
+)
 
 
-def load_curriculum_to_graph(csv_path="../data/curriculum.csv"):
+def load_curriculum_to_graph(
+    csv_path: str | Path = DEFAULT_CURRICULUM_PATH,
+):
     df = pd.read_csv(csv_path)
 
     query = """

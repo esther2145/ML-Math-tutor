@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+.venv
+backend/venv
+**/__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+graph/neo4j_data
+qdrant/storage
+logs
+tmp

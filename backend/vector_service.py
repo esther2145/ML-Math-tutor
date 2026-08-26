@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -10,16 +11,27 @@ from sentence_transformers import SentenceTransformer
 load_dotenv()
 
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+QDRANT_TIMEOUT = float(os.getenv("QDRANT_TIMEOUT", "60"))
 COLLECTION_NAME = "math_learning_materials"
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+MINIMUM_RELEVANCE_SCORE = float(os.getenv("MINIMUM_RELEVANCE_SCORE", "0.35"))
+DEFAULT_MATERIALS_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "data"
+    / "learning_materials.csv"
+)
 
 # all-MiniLM-L6-v2 generates vectors with 384 dimensions.
 VECTOR_SIZE = 384
 
-client = QdrantClient(url=QDRANT_URL)
+client = QdrantClient(url=QDRANT_URL, timeout=QDRANT_TIMEOUT)
 
-# The embedding model is loaded once when the application starts.
-embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+
+@lru_cache(maxsize=1)
+def get_embedding_model() -> SentenceTransformer:
+    """Load the embedding model only when vector work is requested."""
+
+    return SentenceTransformer(EMBEDDING_MODEL_NAME)
 
 
 def test_qdrant_connection() -> dict[str, Any]:
@@ -61,7 +73,7 @@ def create_collection() -> str:
 
 
 def load_materials(
-    csv_path: str = "../data/learning_materials.csv",
+    csv_path: str | Path = DEFAULT_MATERIALS_PATH,
 ) -> int:
     """Convert learning materials into embeddings and store them."""
 
@@ -91,9 +103,14 @@ def load_materials(
             f"Missing CSV columns: {sorted(missing_columns)}"
         )
 
-    texts = dataframe["content"].fillna("").astype(str).tolist()
+    texts = [
+        f"{row.topic}. {row.title}. {row.content}"
+        for row in dataframe[["topic", "title", "content"]]
+        .fillna("")
+        .itertuples(index=False)
+    ]
 
-    vectors = embedding_model.encode(
+    vectors = get_embedding_model().encode(
         texts,
         normalize_embeddings=True,
     )
@@ -103,6 +120,7 @@ def load_materials(
     for row, vector in zip(
         dataframe.to_dict(orient="records"),
         vectors,
+        strict=True,
     ):
         points.append(
             models.PointStruct(
@@ -129,18 +147,33 @@ def load_materials(
 def search_materials(
     question: str,
     limit: int = 3,
+    learner_grade: int | None = None,
 ) -> list[dict[str, Any]]:
     """Retrieve learning materials that are semantically related."""
 
-    question_vector = embedding_model.encode(
+    question_vector = get_embedding_model().encode(
         question,
         normalize_embeddings=True,
     ).tolist()
 
+    grade_filter = None
+
+    if learner_grade is not None:
+        grade_filter = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="grade",
+                    range=models.Range(lte=learner_grade),
+                )
+            ]
+        )
+
     results = client.query_points(
         collection_name=COLLECTION_NAME,
         query=question_vector,
+        query_filter=grade_filter,
         limit=limit,
+        score_threshold=MINIMUM_RELEVANCE_SCORE,
         with_payload=True,
     ).points
 

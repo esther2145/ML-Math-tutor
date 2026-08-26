@@ -7,6 +7,8 @@ load_dotenv()
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+OLLAMA_NUM_PREDICT = int(os.getenv("OLLAMA_NUM_PREDICT", "320"))
+OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "300"))
 
 
 def test_ollama_connection() -> dict:
@@ -46,16 +48,16 @@ def generate_response(prompt: str) -> str:
         "prompt": prompt,
         "stream": False,
         "options": {
-            "num_predict": 80,
-            "temperature": 0.2
-        }
+            "num_predict": OLLAMA_NUM_PREDICT,
+            "temperature": 0.2,
+        },
     }
 
     try:
         response = requests.post(
             f"{OLLAMA_URL}/api/generate",
             json=payload,
-            timeout=600,
+            timeout=OLLAMA_TIMEOUT,
         )
         response.raise_for_status()
 

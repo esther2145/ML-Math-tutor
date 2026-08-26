@@ -1,14 +1,11 @@
 topic,description,grade,difficulty,formula,prerequisite
-Numbers,Basic counting and understanding numbers,1,Easy,,
-Addition,Combining two or more numbers to get a total,1,Easy,a + b,Numbers
-Subtraction,Taking one number away from another,1,Easy,a - b,Numbers
-Multiplication,Repeated addition of the same number,2,Easy,a × b,Addition
-Division,Sharing a number into equal groups,2,Medium,a ÷ b,Multiplication
-Fractions,Parts of a whole number,3,Medium,a/b,Division
-Decimals,Numbers with a decimal point,4,Medium,,
-Percentages,Parts out of one hundred,5,Medium,x%,Fractions
-Ratios,Comparing two quantities,5,Medium,a:b,Division
-Area,The amount of space inside a shape,4,Medium,length × width,Multiplication
-Perimeter,The distance around a shape,3,Easy,add all sides,Addition
-Triangles,Shapes with three sides,4,Medium,,
-Rectangles,Shapes with four sides and equal opposite sides,3,Easy,,
+Counting,Reading and arranging whole numbers in order.,1,beginner,,
+Addition,Combining quantities to find a total.,1,beginner,a + b = c,Counting
+Subtraction,Finding how many remain or finding the difference.,1,beginner,a - b = c,Addition
+Multiplication,Combining equal groups using repeated addition.,2,beginner,a x b = c,Addition
+Division,Sharing a quantity equally or making equal groups.,2,intermediate,a / b = c,Multiplication
+Fractions,Describing equal parts of one whole or one group.,3,intermediate,part / whole,Division
+Decimals,Writing fractions with denominators based on ten.,4,intermediate,place value,Fractions
+Percentages,Describing a quantity as a number of parts out of one hundred.,5,intermediate,part / whole x 100%,Fractions
+Ratio,Comparing two quantities of the same kind.,6,advanced,a:b,Division
+Simple Equations,Finding an unknown value while keeping both sides equal.,7,advanced,a + x = b,Addition

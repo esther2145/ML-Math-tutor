@@ -1,40 +1,40 @@
 from typing import Any
 
-from database import driver
+from .database import driver
 
 
 def get_topic_details(topic_name: str) -> dict[str, Any] | None:
     """
-    Retrieve a rich topic record from the Version 2 knowledge graph.
+    Retrieve a rich topic record from the curriculum graph.
     """
 
     query = """
-    MATCH (topic:GraphNode:Topic)
+    MATCH (topic:Topic)
     WHERE toLower(topic.name) = toLower($topic_name)
 
-    OPTIONAL MATCH (prerequisite:GraphNode:Topic)
+    OPTIONAL MATCH (prerequisite:Topic)
         -[:PREREQUISITE_FOR]->(topic)
 
     OPTIONAL MATCH (topic)
-        -[:PREREQUISITE_FOR]->(next_topic:GraphNode:Topic)
+        -[:PREREQUISITE_FOR]->(next_topic:Topic)
 
-    OPTIONAL MATCH (subtopic:GraphNode:Subtopic)
+    OPTIONAL MATCH (subtopic:Subtopic)
         -[:SUBTOPIC_OF]->(topic)
 
     OPTIONAL MATCH (topic)
-        -[:HAS_CONCEPT]->(concept:GraphNode:Concept)
+        -[:HAS_CONCEPT]->(concept:Concept)
 
     OPTIONAL MATCH (topic)
-        -[:HAS_EXAMPLE]->(example:GraphNode:Example)
+        -[:HAS_EXAMPLE]->(example:Example)
 
     OPTIONAL MATCH (topic)
-        -[:USES_SKILL]->(skill:GraphNode)
+        -[:USES_SKILL]->(skill)
 
     OPTIONAL MATCH (topic)
-        -[:TAUGHT_IN]->(grade:GraphNode:Grade)
+        -[:TAUGHT_IN]->(grade:Grade)
 
     OPTIONAL MATCH (subtopic)
-        -[:HAS_FORMULA]->(formula:GraphNode:Formula)
+        -[:HAS_FORMULA]->(formula:Formula)
 
     RETURN
         topic.node_id AS node_id,
@@ -140,11 +140,11 @@ def get_prerequisite_path(
     """
 
     query = """
-    MATCH (topic:GraphNode:Topic)
+    MATCH (topic:Topic)
     WHERE toLower(topic.name) = toLower($topic_name)
 
     OPTIONAL MATCH path =
-        (prerequisite:GraphNode:Topic)
+        (prerequisite:Topic)
         -[:PREREQUISITE_FOR*1..6]->
         (topic)
 
@@ -183,7 +183,7 @@ def search_topics(search_text: str, limit: int = 10) -> list[dict]:
     """
 
     query = """
-    MATCH (node:GraphNode)
+    MATCH (node)
     WHERE (
         node:Topic OR
         node:Subtopic
@@ -282,4 +282,4 @@ def get_specific_label(labels: list[str]) -> str:
         if label not in ignored_labels:
             return label
 
-    return "GraphNode"
+    return "Unknown"

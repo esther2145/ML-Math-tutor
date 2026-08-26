@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "graft-math-tutor"
+version = "0.1.0"
+description = "A graph- and retrieval-augmented primary mathematics tutor."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "neo4j>=5.26,<7",
+    "pandas>=2.2,<4",
+    "python-dotenv>=1.0,<2",
+    "qdrant-client>=1.13,<2",
+    "requests>=2.32,<3",
+    "sentence-transformers>=3.4,<6",
+    "uvicorn[standard]>=0.34,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.28,<1",
+    "pytest>=8.3,<10",
+    "ruff>=0.9,<1",
+]
+ui = [
+    "streamlit>=1.42,<2",
+]
+
+[tool.setuptools.packages.find]
+include = ["backend*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "SIM"]

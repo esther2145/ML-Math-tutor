@@ -2,8 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from database import driver
-
+from .database import driver
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 NODES_FILE = BASE_DIR / "data" / "graph_nodes.csv"
@@ -98,10 +97,11 @@ def load_nodes() -> int:
                 )
 
             query = f"""
-            MERGE (n:GraphNode:{node_type} {{
-                node_id: $node_id
+            MERGE (n:{node_type} {{
+                name: $name
             }})
-            SET n.name = $name,
+            SET n:GraphNode,
+                n.node_id = $node_id,
                 n.description = $description,
                 n.grade = $grade,
                 n.difficulty = $difficulty,

@@ -1,6 +1,7 @@
-from neo4j import GraphDatabase
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
+from neo4j import GraphDatabase
 
 # Load variables from .env
 load_dotenv()
