@@ -1,6 +1,6 @@
 
-import numbers
 import re
+from decimal import Decimal
 
 from .math_service import solve_arithmetic_question
 
@@ -8,7 +8,7 @@ from .math_service import solve_arithmetic_question
 def verify_arithmetic_answer(
     question: str,
     answer: str,
-) -> dict:
+) -> dict[str, str | None]:
     """
     Check whether an answer contains the result produced by
     the existing arithmetic solver.
@@ -31,13 +31,7 @@ def verify_arithmetic_answer(
         }
 
     if calculation.error:
-        mentions_error = bool(
-            re.search(
-                r"undefined|division by zero|divided by zero",
-                answer,
-                re.IGNORECASE,
-            )
-        )
+        mentions_error = _identifies_arithmetic_error(answer)
 
         return {
             "status": "passed" if mentions_error else "failed",
@@ -55,13 +49,25 @@ def verify_arithmetic_answer(
 
     expected = calculation.result
 
-# Find numeric values in the generated answer.
-    numbers = re.findall(
-        r"(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])",
-        answer
+    answer_numbers = re.findall(
+        r"(?<![\w.])-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?!\w)",
+        answer,
     )
-
-    matches = expected in numbers
+    expected_fraction = bool(
+        re.search(r"(?<!\w)-?\d+/\d+(?!\w)", expected)
+    )
+    matches = (
+        re.search(
+            rf"(?<![\w.]){re.escape(expected)}(?!\w)",
+            answer,
+        )
+        is not None
+        if expected_fraction
+        else any(
+            Decimal(number.replace(",", "")) == Decimal(expected)
+            for number in answer_numbers
+        )
+    )
 
     return {
         "status": "passed" if matches else "failed",
@@ -76,3 +82,19 @@ def verify_arithmetic_answer(
                  "found in the generated answer."
         ),
     }
+
+
+def _identifies_arithmetic_error(answer: str) -> bool:
+    error_pattern = re.compile(
+        r"\b(?:undefined|division\s+by\s+zero|divided\s+by\s+zero)\b",
+        re.IGNORECASE,
+    )
+    negation_pattern = re.compile(
+        r"\b(?:not|isn't|is\s+not|never|without)\s+(?:\w+\s+){0,2}$",
+        re.IGNORECASE,
+    )
+
+    return any(
+        not negation_pattern.search(answer[max(0, match.start() - 32):match.start()])
+        for match in error_pattern.finditer(answer)
+    )

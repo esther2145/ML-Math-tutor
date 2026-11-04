@@ -39,6 +39,22 @@ The API documentation remains available at `http://localhost:8000/docs`.
 The CSV files in `data/` are small starter datasets intended for development,
 not a complete or officially validated national curriculum.
 
+## React frontend prototype
+
+The separate React and TypeScript interface lives in `frontend/`; it does not
+replace Streamlit. To run it on Windows, install Node.js, then in a PowerShell
+terminal run:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend currently provides navigable learner and teacher interface
+previews. Chat and teacher requests are not connected to FastAPI yet. See
+`frontend/README.md` for the current prototype scope.
+
 ## Local development
 
 Create and activate a Python 3.11+ virtual environment, then install the app and
