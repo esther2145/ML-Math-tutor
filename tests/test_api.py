@@ -45,6 +45,33 @@ def test_tutor_ask_returns_service_result(monkeypatch):
     assert response.json() == expected
 
 
+def test_tutor_ask_normalizes_and_passes_country_code(monkeypatch):
+    captured = {}
+
+    def fake_answer(**arguments):
+        captured.update(arguments)
+        return {"answer": "A response."}
+
+    monkeypatch.setattr(main, "answer_math_question", fake_answer)
+
+    response = client.post(
+        "/tutor/ask",
+        json={"question": "How do I add?", "country_code": " ug "},
+    )
+
+    assert response.status_code == 200
+    assert captured["country_code"] == "UG"
+
+
+def test_tutor_ask_rejects_invalid_country_code():
+    response = client.post(
+        "/tutor/ask",
+        json={"question": "How do I add?", "country_code": "UGA"},
+    )
+
+    assert response.status_code == 400
+
+
 def test_graph_topic_returns_404_when_topic_is_unknown(monkeypatch):
     monkeypatch.setattr(main, "get_topic_details", lambda _: None)
 

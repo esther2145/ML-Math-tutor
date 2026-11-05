@@ -38,6 +38,8 @@ The API documentation remains available at `http://localhost:8000/docs`.
 
 The CSV files in `data/` are small starter datasets intended for development,
 not a complete or officially validated national curriculum.
+The [data sourcing guide](data/README.md) explains the country-specific intake
+templates, source tracking, and review requirements.
 
 ## React frontend prototype
 

@@ -122,6 +122,11 @@ def load_materials(
         vectors,
         strict=True,
     ):
+        country_code = clean_optional_value(row.get("country_code"))
+        source_status = (
+            clean_optional_value(row.get("source_status"))
+            or "prototype_unverified"
+        )
         points.append(
             models.PointStruct(
                 id=int(row["id"]),
@@ -131,6 +136,30 @@ def load_materials(
                     "grade": int(row["grade"]),
                     "title": str(row["title"]),
                     "content": str(row["content"]),
+                    "country_code": (
+                        country_code.upper()
+                        if country_code
+                        else None
+                    ),
+                    "curriculum_name": clean_optional_value(
+                        row.get("curriculum_name")
+                    ),
+                    "curriculum_version": clean_optional_value(
+                        row.get("curriculum_version")
+                    ),
+                    "source_title": clean_optional_value(
+                        row.get("source_title")
+                    ),
+                    "source_url": clean_optional_value(
+                        row.get("source_url")
+                    ),
+                    "source_page": clean_optional_value(
+                        row.get("source_page")
+                    ),
+                    "source_license": clean_optional_value(
+                        row.get("source_license")
+                    ),
+                    "source_status": source_status,
                 },
             )
         )
@@ -148,6 +177,7 @@ def search_materials(
     question: str,
     limit: int = 3,
     learner_grade: int | None = None,
+    country_code: str | None = None,
 ) -> list[dict[str, Any]]:
     """Retrieve learning materials that are semantically related."""
 
@@ -156,22 +186,42 @@ def search_materials(
         normalize_embeddings=True,
     ).tolist()
 
-    grade_filter = None
+    filter_conditions = []
 
     if learner_grade is not None:
-        grade_filter = models.Filter(
-            must=[
-                models.FieldCondition(
-                    key="grade",
-                    range=models.Range(lte=learner_grade),
-                )
-            ]
+        filter_conditions.append(
+            models.FieldCondition(
+                key="grade",
+                range=models.Range(lte=learner_grade),
+            )
         )
+
+    if country_code is not None:
+        filter_conditions.append(
+            models.FieldCondition(
+                key="country_code",
+                match=models.MatchValue(
+                    value=country_code.strip().upper()
+                ),
+            )
+        )
+        filter_conditions.append(
+            models.FieldCondition(
+                key="source_status",
+                match=models.MatchValue(value="reviewed"),
+            )
+        )
+
+    query_filter = (
+        models.Filter(must=filter_conditions)
+        if filter_conditions
+        else None
+    )
 
     results = client.query_points(
         collection_name=COLLECTION_NAME,
         query=question_vector,
-        query_filter=grade_filter,
+        query_filter=query_filter,
         limit=limit,
         score_threshold=MINIMUM_RELEVANCE_SCORE,
         with_payload=True,
@@ -184,6 +234,22 @@ def search_materials(
             "grade": result.payload.get("grade"),
             "title": result.payload.get("title"),
             "content": result.payload.get("content"),
+            "country_code": result.payload.get("country_code"),
+            "curriculum_name": result.payload.get("curriculum_name"),
+            "curriculum_version": result.payload.get("curriculum_version"),
+            "source_title": result.payload.get("source_title"),
+            "source_url": result.payload.get("source_url"),
+            "source_page": result.payload.get("source_page"),
+            "source_license": result.payload.get("source_license"),
+            "source_status": result.payload.get("source_status"),
         }
         for result in results
     ]
+
+
+def clean_optional_value(value: Any) -> str | None:
+    if pd.isna(value):
+        return None
+
+    normalized = str(value).strip()
+    return normalized or None

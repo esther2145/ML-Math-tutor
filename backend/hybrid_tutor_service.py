@@ -67,6 +67,7 @@ def answer_math_question(
     question: str,
     learner_grade: int | None = None,
     result_limit: int = 3,
+    country_code: str | None = None,
 ) -> dict[str, Any]:
     """
     Retrieve information from Qdrant and Neo4j,
@@ -90,6 +91,7 @@ def answer_math_question(
         question=question,
         limit=result_limit,
         learner_grade=learner_grade,
+        country_code=country_code,
     )
 
     # Use the highest-ranked Qdrant result to identify the likely topic.
@@ -101,7 +103,7 @@ def answer_math_question(
 
     graph_topic = (
         get_topic_details(detected_topic)
-        if detected_topic
+        if detected_topic and country_code is None
         else None
     )
 
@@ -150,6 +152,7 @@ INSTRUCTIONS
 
     return {
         "question": question,
+        "country_code": country_code,
         "learner_grade": grade,
         "detected_topic": detected_topic,
         "graph_context": graph_topic,

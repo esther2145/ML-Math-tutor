@@ -48,6 +48,34 @@ def test_answer_uses_detected_topic_and_requested_grade(monkeypatch):
     assert search_arguments["learner_grade"] == 2
 
 
+def test_country_scoped_answer_does_not_use_unscoped_graph(monkeypatch):
+    search_arguments = {}
+
+    def fake_search(**arguments):
+        search_arguments.update(arguments)
+        return []
+
+    def fail_if_called(_):
+        raise AssertionError("Country-scoped answers must not use unscoped graph data")
+
+    monkeypatch.setattr(hybrid_tutor_service, "search_materials", fake_search)
+    monkeypatch.setattr(hybrid_tutor_service, "get_topic_details", fail_if_called)
+    monkeypatch.setattr(
+        hybrid_tutor_service,
+        "generate_response",
+        lambda _: "More curriculum information is needed.",
+    )
+
+    result = hybrid_tutor_service.answer_math_question(
+        "How do I add?",
+        country_code="UG",
+    )
+
+    assert search_arguments["country_code"] == "UG"
+    assert result["country_code"] == "UG"
+    assert result["graph_context"] is None
+
+
 def test_explicit_arithmetic_bypasses_external_services(monkeypatch):
     def fail_if_called(**_):
         raise AssertionError("Retrieval should not run for explicit arithmetic")

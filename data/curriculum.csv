@@ -1,11 +1,11 @@
-topic,description,grade,difficulty,formula,prerequisite
-Counting,Reading and arranging whole numbers in order.,1,beginner,,
-Addition,Combining quantities to find a total.,1,beginner,a + b = c,Counting
-Subtraction,Finding how many remain or finding the difference.,1,beginner,a - b = c,Addition
-Multiplication,Combining equal groups using repeated addition.,2,beginner,a x b = c,Addition
-Division,Sharing a quantity equally or making equal groups.,2,intermediate,a / b = c,Multiplication
-Fractions,Describing equal parts of one whole or one group.,3,intermediate,part / whole,Division
-Decimals,Writing fractions with denominators based on ten.,4,intermediate,place value,Fractions
-Percentages,Describing a quantity as a number of parts out of one hundred.,5,intermediate,part / whole x 100%,Fractions
-Ratio,Comparing two quantities of the same kind.,6,advanced,a:b,Division
-Simple Equations,Finding an unknown value while keeping both sides equal.,7,advanced,a + x = b,Addition
+topic,description,grade,difficulty,formula,prerequisite,country_code,curriculum_name,curriculum_version,source_title,source_url,source_page,source_license,source_status
+Counting,Reading and arranging whole numbers in order.,1,beginner,,,,,,,,,,prototype_unverified
+Addition,Combining quantities to find a total.,1,beginner,a + b = c,Counting,,,,,,,,prototype_unverified
+Subtraction,Finding how many remain or finding the difference.,1,beginner,a - b = c,Addition,,,,,,,,prototype_unverified
+Multiplication,Combining equal groups using repeated addition.,2,beginner,a x b = c,Addition,,,,,,,,prototype_unverified
+Division,Sharing a quantity equally or making equal groups.,2,intermediate,a / b = c,Multiplication,,,,,,,,prototype_unverified
+Fractions,Describing equal parts of one whole or one group.,3,intermediate,part / whole,Division,,,,,,,,prototype_unverified
+Decimals,Writing fractions with denominators based on ten.,4,intermediate,place value,Fractions,,,,,,,,prototype_unverified
+Percentages,Describing a quantity as a number of parts out of one hundred.,5,intermediate,part / whole x 100%,Fractions,,,,,,,,prototype_unverified
+Ratio,Comparing two quantities of the same kind.,6,advanced,a:b,Division,,,,,,,,prototype_unverified
+Simple Equations,Finding an unknown value while keeping both sides equal.,7,advanced,a + x = b,Addition,,,,,,,,prototype_unverified

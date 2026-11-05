@@ -38,6 +38,7 @@ class TutorQuestionRequest(BaseModel):
     question: str
     learner_grade: int | None = None
     result_limit: int = 3
+    country_code: str | None = None
 
 class GraphSearchRequest(BaseModel):
     search_text: str
@@ -232,11 +233,27 @@ def ask_tutor(request: TutorQuestionRequest):
             detail="The result limit must be between 1 and 5.",
         )
 
+    country_code = (
+        request.country_code.strip().upper()
+        if request.country_code
+        else None
+    )
+    if country_code is not None and (
+        len(country_code) != 2
+        or not country_code.isascii()
+        or not country_code.isalpha()
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Country code must be a two-letter ISO code.",
+        )
+
     try:
         result = answer_math_question(
             question=request.question,
             learner_grade=request.learner_grade,
             result_limit=request.result_limit,
+            country_code=country_code,
         )
 
         return result

@@ -60,3 +60,16 @@ def test_advanced_graph_contains_every_curriculum_topic():
     }
 
     assert graph_topics == curriculum_topics
+
+
+def test_starter_materials_are_not_mislabeled_as_national_curriculum():
+    for filename in ("curriculum.csv", "learning_materials.csv"):
+        rows = read_rows(filename)
+
+        assert rows
+        assert all(row["source_status"] == "prototype_unverified" for row in rows)
+        assert all(not row["country_code"] for row in rows)
+
+
+def test_regional_alignment_template_starts_without_unverified_matches():
+    assert read_rows("eac_curriculum_alignments.csv") == []
