@@ -3,7 +3,8 @@ from typing import Any
 from .graph_service import get_topic_details
 from .math_service import build_calculation_answer, solve_arithmetic_question
 from .ollama_service import generate_response
-from .vector_service import search_materials
+from .vector_service import MINIMUM_RELEVANCE_SCORE, search_materials
+from .verification_service import verify_arithmetic_answer
 
 
 def build_graph_context(topic: dict[str, Any] | None) -> str:
@@ -77,14 +78,33 @@ def answer_math_question(
     verified_calculation = solve_arithmetic_question(question)
 
     if verified_calculation is not None:
+        answer = build_calculation_answer(verified_calculation)
         return {
             "question": question,
+            "country_code": country_code,
             "learner_grade": learner_grade or 3,
             "detected_topic": verified_calculation.topic,
             "graph_context": None,
             "retrieved_materials": [],
             "verified_calculation": verified_calculation.to_dict(),
-            "answer": build_calculation_answer(verified_calculation),
+            "verification": verify_arithmetic_answer(question, answer),
+            "retrieval_trace": {
+                "vector_search": {
+                    "status": "not_run_deterministic_arithmetic",
+                    "filters": {},
+                    "minimum_score": None,
+                    "hit_count": 0,
+                    "hits": [],
+                },
+                "graph_lookup": {
+                    "status": "not_run_deterministic_arithmetic",
+                    "query_topic": None,
+                    "node_id": None,
+                    "topic": None,
+                    "provenance_status": "not_applicable",
+                },
+            },
+            "answer": answer,
         }
 
     materials = search_materials(
@@ -106,6 +126,14 @@ def answer_math_question(
         if detected_topic and country_code is None
         else None
     )
+    if country_code is not None:
+        graph_lookup_status = "skipped_country_scope"
+    elif detected_topic is None:
+        graph_lookup_status = "skipped_no_detected_topic"
+    elif graph_topic is None:
+        graph_lookup_status = "not_found"
+    else:
+        graph_lookup_status = "found"
 
     if learner_grade is not None:
         grade = learner_grade
@@ -149,6 +177,7 @@ INSTRUCTIONS
 """
 
     answer = generate_response(prompt)
+    verification = verify_arithmetic_answer(question, answer)
 
     return {
         "question": question,
@@ -158,5 +187,48 @@ INSTRUCTIONS
         "graph_context": graph_topic,
         "retrieved_materials": materials,
         "verified_calculation": None,
+        "verification": verification,
+        "retrieval_trace": {
+            "vector_search": {
+                "status": "completed",
+                "filters": {
+                    "country_code": country_code,
+                    "maximum_grade": learner_grade,
+                    "required_source_status": (
+                        "reviewed" if country_code is not None else None
+                    ),
+                    "limit": result_limit,
+                },
+                "minimum_score": MINIMUM_RELEVANCE_SCORE,
+                "hit_count": len(materials),
+                "hits": [
+                    {
+                        "id": material.get("id"),
+                        "topic": material.get("topic"),
+                        "grade": material.get("grade"),
+                        "title": material.get("title"),
+                        "score": material.get("score"),
+                        "country_code": material.get("country_code"),
+                        "curriculum_name": material.get("curriculum_name"),
+                        "curriculum_version": material.get("curriculum_version"),
+                        "source_title": material.get("source_title"),
+                        "source_url": material.get("source_url"),
+                        "source_page": material.get("source_page"),
+                        "source_license": material.get("source_license"),
+                        "source_status": material.get("source_status"),
+                    }
+                    for material in materials
+                ],
+            },
+            "graph_lookup": {
+                "status": graph_lookup_status,
+                "query_topic": detected_topic,
+                "node_id": graph_topic.get("node_id") if graph_topic else None,
+                "topic": graph_topic.get("topic") if graph_topic else None,
+                "provenance_status": (
+                    "not_recorded" if graph_topic else "not_applicable"
+                ),
+            },
+        },
         "answer": answer,
     }

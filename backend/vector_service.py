@@ -229,6 +229,7 @@ def search_materials(
 
     return [
         {
+            "id": getattr(result, "id", None),
             "score": round(float(result.score), 4),
             "topic": result.payload.get("topic"),
             "grade": result.payload.get("grade"),

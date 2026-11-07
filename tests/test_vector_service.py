@@ -15,6 +15,7 @@ class FakeQdrantClient:
     def query_points(self, **arguments):
         self.arguments = arguments
         point = SimpleNamespace(
+            id=17,
             score=0.9,
             payload={
                 "topic": "Addition",
@@ -56,6 +57,7 @@ def test_search_applies_grade_country_and_relevance_filters(monkeypatch):
     assert status_condition.match.value == "reviewed"
     assert arguments["score_threshold"] == vector_service.MINIMUM_RELEVANCE_SCORE
     assert results[0]["topic"] == "Addition"
+    assert results[0]["id"] == 17
     assert results[0]["country_code"] == "UG"
     assert results[0]["source_status"] == "reviewed"
 

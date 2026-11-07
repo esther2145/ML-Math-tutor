@@ -32,6 +32,11 @@ def test_tutor_ask_returns_service_result(monkeypatch):
     expected = {
         "question": "What is 2 + 2?",
         "learner_grade": 1,
+        "verification": {
+            "status": "passed",
+            "check": "arithmetic_result",
+            "expected_result": "4",
+        },
         "answer": "Four.",
     }
     monkeypatch.setattr(main, "answer_math_question", lambda **_: expected)

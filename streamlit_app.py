@@ -112,6 +112,12 @@ for message in st.session_state.messages:
                     st.write("### Knowledge graph context")
                     st.json(graph_context)
 
+                retrieval_trace = metadata.get("retrieval_trace")
+
+                if retrieval_trace:
+                    st.write("### Retrieval trace")
+                    st.json(retrieval_trace)
+
                 materials = metadata.get("retrieved_materials", [])
 
                 if materials:
@@ -160,11 +166,31 @@ if question:
 
             st.markdown(answer)
 
+            verification = result.get("verification")
+            if verification:
+                status = verification.get("status")
+                if status == "passed":
+                    st.success(
+                        "Arithmetic result check passed. "
+                        "This does not verify the full explanation."
+                    )
+                elif status == "failed":
+                    st.warning(
+                        "The arithmetic result check did not pass. "
+                        "Please review the answer."
+                    )
+                else:
+                    st.info(
+                        "This answer was not checked by the arithmetic "
+                        "verifier; that does not mean it is verified."
+                    )
+
             st.session_state.messages.append(
                 {
                     "role": "assistant",
                     "content": answer,
                     "metadata": {
+                        "verification": verification,
                         "detected_topic": result.get(
                             "detected_topic"
                         ),
@@ -175,12 +201,17 @@ if question:
                             "retrieved_materials",
                             [],
                         ),
+                        "retrieval_trace": result.get("retrieval_trace"),
                     },
                 }
             )
 
             if show_sources:
                 with st.expander("View curriculum sources"):
+                    if verification:
+                        st.write("### Verification")
+                        st.json(verification)
+
                     if result.get("detected_topic"):
                         st.write(
                             "**Detected topic:** "
@@ -190,6 +221,10 @@ if question:
                     if result.get("graph_context"):
                         st.write("### Knowledge graph context")
                         st.json(result["graph_context"])
+
+                    if result.get("retrieval_trace"):
+                        st.write("### Retrieval trace")
+                        st.json(result["retrieval_trace"])
 
                     materials = result.get(
                         "retrieved_materials",

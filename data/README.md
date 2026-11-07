@@ -46,6 +46,14 @@ Both documents are registered in `curriculum_sources.csv`. Their local
 availability does not establish permission to redistribute, transform, or
 store their text in an application.
 
+The user has also supplied the 2012 `PRIMARY-SEVEN-SET-ONE.pdf` and explicitly
+authorized its use in this project. It is an NCDC Uganda Primary Seven
+curriculum document; its Mathematics Syllabus occupies PDF pages 148-189
+(printed pages 127-168). The publisher notice still states permission is
+required for reproduction. The user's authorization is recorded as project
+permission, not as an open license or permission for redistribution. Source
+facts added to internal evaluation data should use pinpoint page references.
+
 ## East African comparisons
 
 `eac_curriculum_alignments.csv` is deliberately a separate crosswalk. Record
@@ -75,3 +83,51 @@ Run `POST /vector/load-materials` after updating the CSV to refresh the Qdrant
 collection. Country-scoped tutor requests use the `country_code` field. The
 legacy graph loader is not yet curriculum-scoped; country-scoped requests
 therefore do not use its graph context until that graph data model is updated.
+
+## Initial hallucination-evaluation set
+
+`evaluation_cases.csv` is the first small, traceable evaluation set. It keeps
+four kinds of cases separate:
+
+- `automated_solver`: authored explicit arithmetic questions with expected
+  results reproducible by the deterministic arithmetic service.
+- `policy_only`: out-of-source and ambiguous questions with the desired
+  abstain/clarify behavior. These are not automated because the live tutor
+  does not implement a checked abstention policy yet.
+- `blocked_pending_source`: curriculum questions that cannot be scored until an
+  approved, reusable curriculum source is added and reviewed.
+- `manual_source_review`: concise document-specific facts from the user-
+  authorized P7 2012 PDF with a pinpoint page reference. These should be
+  checked by a reviewer against that edition and must not be described as
+  current curriculum without newer evidence.
+
+Run `python -m pytest -q tests/test_evaluation_dataset.py` from the repository
+root to validate the dataset and arithmetic ground truth. Do not combine these
+categories into one accuracy score: arithmetic solver correctness, evidence
+coverage, and abstention behavior need separate measures. This starter set
+validates test data and deterministic arithmetic, with one manually sourced P7
+fact for review. It does not yet measure LLM hallucinations or demonstrate that
+graph retrieval improves answers.
+
+## Inspecting runtime retrieval
+
+`POST /tutor/ask` responses include `retrieval_trace`. It records the vector
+search filters, threshold, hit count, material IDs, relevance scores, and source
+metadata for each returned passage. `retrieved_materials` retains the full
+passage text. The trace also records whether the graph lookup was performed,
+skipped, or found no node, along with the queried topic and node ID.
+
+Graph nodes currently have no source provenance stored, so a graph hit is
+explicitly marked `provenance_status=not_recorded`. A trace makes retrieval
+observable; it does not prove that the generated response is supported by
+those sources. The Streamlit source expander displays this trace when
+"Show retrieved curriculum information" is enabled.
+
+## Live verification status
+
+The live tutor response now includes a `verification` result. The arithmetic
+branch checks the deterministic answer against the question and reports
+`passed` or `failed`. For generated explanations outside the solver's supported
+arithmetic scope, it reports `not_checked`. This is not a curriculum evidence
+or reasoning verifier, and no refinement attempt is performed yet. The UI
+states this limitation instead of presenting `not_checked` as verified.
