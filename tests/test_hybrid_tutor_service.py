@@ -41,11 +41,13 @@ def test_answer_uses_detected_topic_and_requested_grade(monkeypatch):
         "get_topic_details",
         lambda _: topic,
     )
-    monkeypatch.setattr(
-        hybrid_tutor_service,
-        "generate_response",
-        lambda _: "A grounded answer.",
-    )
+    prompts = []
+
+    def fake_generate(prompt):
+        prompts.append(prompt)
+        return "Addition joins quantities [M1]."
+
+    monkeypatch.setattr(hybrid_tutor_service, "generate_response", fake_generate)
 
     result = hybrid_tutor_service.answer_math_question(
         "How do I add?",
@@ -54,9 +56,13 @@ def test_answer_uses_detected_topic_and_requested_grade(monkeypatch):
 
     assert result["detected_topic"] == "Addition"
     assert result["learner_grade"] == 2
-    assert result["answer"] == "A grounded answer."
+    assert result["answer"] == "Addition joins quantities [M1]."
     assert result["verification"]["status"] == "not_checked"
-    assert result["verification"]["check"] == "arithmetic_result"
+    assert result["verification"]["check"] == "evidence_references"
+    assert result["verification"]["reference_status"] == "passed"
+    assert result["verification"]["refinement_attempts"] == 0
+    assert "[M1]" in prompts[0]
+    assert "[G1]" in prompts[0]
     assert search_arguments["learner_grade"] == 2
     vector_trace = result["retrieval_trace"]["vector_search"]
     assert vector_trace["status"] == "completed"
@@ -85,11 +91,10 @@ def test_country_scoped_answer_does_not_use_unscoped_graph(monkeypatch):
 
     monkeypatch.setattr(hybrid_tutor_service, "search_materials", fake_search)
     monkeypatch.setattr(hybrid_tutor_service, "get_topic_details", fail_if_called)
-    monkeypatch.setattr(
-        hybrid_tutor_service,
-        "generate_response",
-        lambda _: "More curriculum information is needed.",
-    )
+    def fail_if_called(_):
+        raise AssertionError("Generation must not run without supporting evidence")
+
+    monkeypatch.setattr(hybrid_tutor_service, "generate_response", fail_if_called)
 
     result = hybrid_tutor_service.answer_math_question(
         "How do I add?",
@@ -104,6 +109,7 @@ def test_country_scoped_answer_does_not_use_unscoped_graph(monkeypatch):
     assert trace["vector_search"]["filters"]["required_source_status"] == "reviewed"
     assert trace["vector_search"]["hit_count"] == 0
     assert trace["graph_lookup"]["status"] == "skipped_country_scope"
+    assert result["verification"]["reference_status"] == "not_checkable"
 
 
 def test_empty_vector_search_is_recorded_without_graph_lookup(monkeypatch):
@@ -112,11 +118,10 @@ def test_empty_vector_search_is_recorded_without_graph_lookup(monkeypatch):
         "search_materials",
         lambda **_: [],
     )
-    monkeypatch.setattr(
-        hybrid_tutor_service,
-        "generate_response",
-        lambda _: "More curriculum information is needed.",
-    )
+    def fail_if_called(_):
+        raise AssertionError("Generation must not run without supporting evidence")
+
+    monkeypatch.setattr(hybrid_tutor_service, "generate_response", fail_if_called)
 
     result = hybrid_tutor_service.answer_math_question("Explain fractions.")
 
@@ -124,6 +129,7 @@ def test_empty_vector_search_is_recorded_without_graph_lookup(monkeypatch):
     assert trace["vector_search"]["status"] == "completed"
     assert trace["vector_search"]["hit_count"] == 0
     assert trace["vector_search"]["hits"] == []
+    assert result["verification"]["reference_status"] == "not_checkable"
     assert trace["graph_lookup"] == {
         "status": "skipped_no_detected_topic",
         "query_topic": None,
@@ -168,3 +174,66 @@ def test_arithmetic_verification_failure_is_returned(monkeypatch):
     assert result["answer"] == "The answer is 5."
     assert result["verification"]["status"] == "failed"
     assert result["verification"]["expected_result"] == "4"
+
+
+def test_missing_citations_trigger_one_refinement(monkeypatch):
+    responses = iter(
+        [
+            "Addition joins quantities.",
+            "Addition joins quantities [M1].",
+        ]
+    )
+    prompts = []
+
+    monkeypatch.setattr(
+        hybrid_tutor_service,
+        "search_materials",
+        lambda **_: [{"topic": "Addition", "content": "Addition joins quantities."}],
+    )
+    monkeypatch.setattr(hybrid_tutor_service, "get_topic_details", lambda _: None)
+    monkeypatch.setattr(
+        hybrid_tutor_service,
+        "generate_response",
+        lambda prompt: prompts.append(prompt) or next(responses),
+    )
+
+    result = hybrid_tutor_service.answer_math_question("Explain addition.")
+
+    assert result["answer"] == "Addition joins quantities [M1]."
+    assert result["verification"]["reference_status"] == "passed"
+    assert result["verification"]["refinement_attempts"] == 1
+    assert len(prompts) == 2
+    assert "Sentences without a citation: 1" in prompts[1]
+
+
+def test_failed_citation_refinement_is_reported_without_claiming_verification(
+    monkeypatch,
+):
+    responses = iter(
+        [
+            "Addition joins quantities [M9].",
+            "Addition joins quantities [M8].",
+        ]
+    )
+    monkeypatch.setattr(
+        hybrid_tutor_service,
+        "search_materials",
+        lambda **_: [{"topic": "Addition", "content": "Addition joins quantities."}],
+    )
+    monkeypatch.setattr(hybrid_tutor_service, "get_topic_details", lambda _: None)
+    monkeypatch.setattr(
+        hybrid_tutor_service,
+        "generate_response",
+        lambda _: next(responses),
+    )
+
+    result = hybrid_tutor_service.answer_math_question("Explain addition.")
+
+    assert result["answer"] == (
+        "I couldn't produce an answer with checkable evidence references. "
+        "Please try asking in a different way."
+    )
+    assert result["verification"]["status"] == "not_checked"
+    assert result["verification"]["reference_status"] == "failed"
+    assert result["verification"]["invalid_references"] == ["M8"]
+    assert result["verification"]["refinement_attempts"] == 1

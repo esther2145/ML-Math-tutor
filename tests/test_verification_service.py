@@ -1,6 +1,9 @@
 import pytest
 
-from backend.verification_service import verify_arithmetic_answer
+from backend.verification_service import (
+    verify_arithmetic_answer,
+    verify_evidence_references,
+)
 
 
 @pytest.mark.parametrize(
@@ -68,3 +71,50 @@ def test_rejects_answer_that_denies_or_omits_division_error(answer):
     result = verify_arithmetic_answer("Calculate 5 / 0", answer)
 
     assert result["status"] == "failed"
+
+
+def test_evidence_reference_check_passes_valid_citations_without_claiming_support():
+    result = verify_evidence_references(
+        "Addition joins quantities [M1].",
+        ["M1"],
+    )
+
+    assert result["status"] == "not_checked"
+    assert result["reference_status"] == "passed"
+    assert "does not verify that the evidence supports" in result["reason"]
+
+
+def test_evidence_reference_check_rejects_unknown_citation():
+    result = verify_evidence_references(
+        "Addition joins quantities [M2].",
+        ["M1"],
+    )
+
+    assert result["reference_status"] == "failed"
+    assert result["invalid_references"] == ["M2"]
+
+
+def test_evidence_reference_check_rejects_uncited_sentence():
+    result = verify_evidence_references(
+        "Addition joins quantities [M1]. It always uses carrying.",
+        ["M1"],
+    )
+
+    assert result["reference_status"] == "failed"
+    assert result["uncited_claim_count"] == 1
+
+
+def test_evidence_reference_check_rejects_empty_answer():
+    result = verify_evidence_references("", ["M1"])
+
+    assert result["reference_status"] == "failed"
+
+
+def test_evidence_reference_check_is_not_checkable_without_evidence():
+    result = verify_evidence_references(
+        "An unsupported explanation.",
+        [],
+    )
+
+    assert result["status"] == "not_checked"
+    assert result["reference_status"] == "not_checkable"

@@ -7,6 +7,12 @@ import {
   Routes,
   useLocation,
 } from 'react-router-dom'
+import {
+  askTutor,
+  type RetrievedMaterial,
+  type RetrievalTrace,
+  type VerificationResult,
+} from './services/tutorApi'
 import './App.css'
 
 const practiceQuestion = {
@@ -116,36 +122,129 @@ function LearnerLayout({ children }: { children: ReactNode }) {
 
 function LearnerTutorPage() {
   const [question, setQuestion] = useState('')
-  const [notice, setNotice] = useState('')
+  const [learnerGrade, setLearnerGrade] = useState(3)
+  const [messages, setMessages] = useState<
+    {
+      id: number
+      role: 'user' | 'assistant'
+      content: string
+      verification?: VerificationResult
+      retrievedMaterials?: RetrievedMaterial[]
+      retrievalTrace?: RetrievalTrace
+    }[]
+  >([])
+  const [error, setError] = useState('')
+  const [isSending, setIsSending] = useState(false)
 
-  function submitQuestion(event: FormEvent<HTMLFormElement>) {
+  async function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!question.trim()) {
-      setNotice('Write a question first, and then try again.')
+    const trimmedQuestion = question.trim()
+    if (!trimmedQuestion || isSending) {
       return
     }
-    setNotice('The chat interface is ready. Tutor connection is the next step; no answer has been generated.')
+
+    setError('')
+    setQuestion('')
+    setMessages((current) => [
+      ...current,
+      {
+        id: Date.now(),
+        role: 'user',
+        content: trimmedQuestion,
+      },
+    ])
+    setIsSending(true)
+
+    try {
+      const result = await askTutor(trimmedQuestion, learnerGrade)
+      setMessages((current) => [
+        ...current,
+        {
+          id: Date.now(),
+          role: 'assistant',
+          content: result.answer,
+          verification: result.verification,
+          retrievedMaterials: result.retrieved_materials,
+          retrievalTrace: result.retrieval_trace,
+        },
+      ])
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'An unexpected error occurred while contacting the tutor.',
+      )
+    } finally {
+      setIsSending(false)
+    }
   }
 
   return (
     <LearnerLayout>
-      <div className="preview-banner"><span aria-hidden="true">ⓘ</span> Interface preview · tutor connection is not active yet</div>
+      <div className="preview-banner"><span aria-hidden="true">ⓘ</span> Connected to the tutor API · each question is sent independently</div>
       <div className="page-heading learner-heading">
         <span className="eyebrow">YOUR MATHS SPACE</span>
         <h1>What are you wondering?</h1>
-        <p>Ask a maths question and explore it one step at a time.</p>
+        <p>Ask a maths question. Choose a level to help shape the explanation.</p>
       </div>
-      <section className="chat-card" aria-label="Tutor chat preview">
-        <div className="chat-welcome">
-          <div className="chat-avatar" aria-hidden="true">✳</div>
-          <div>
-            <strong>Your maths tutor</strong>
-            <p>When connected, this is where your explanation will appear.</p>
-          </div>
+      <section className="chat-card" aria-label="Tutor chat">
+        <div className="learner-settings">
+          <label htmlFor="learner-grade">Learner level</label>
+          <select
+            id="learner-grade"
+            value={learnerGrade}
+            onChange={(event) => setLearnerGrade(Number(event.target.value))}
+            disabled={isSending}
+          >
+            {Array.from({ length: 7 }, (_, index) => index + 1).map((grade) => (
+              <option key={grade} value={grade}>Primary {grade}</option>
+            ))}
+          </select>
         </div>
+        {messages.length === 0 ? (
+          <div className="chat-welcome">
+            <div className="chat-avatar" aria-hidden="true">✳</div>
+            <div>
+              <strong>Your maths tutor</strong>
+              <p>Send a question to get an explanation from the G-RAFT backend.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="chat-messages" aria-live="polite">
+            {messages.map((message) => (
+              <article className={`chat-message ${message.role}`} key={message.id}>
+                <span className="message-author">
+                  {message.role === 'user' ? 'You' : 'G-RAFT tutor'}
+                </span>
+                <p>{message.content}</p>
+                {message.role === 'assistant' && (
+                  <>
+                    {message.verification && (
+                      <VerificationNotice verification={message.verification} />
+                    )}
+                    {(message.retrievedMaterials?.length || message.retrievalTrace) && (
+                      <RetrievalDetails
+                        materials={message.retrievedMaterials ?? []}
+                        trace={message.retrievalTrace}
+                      />
+                    )}
+                  </>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+        {isSending && <p className="sending-status" role="status">The tutor is preparing a response…</p>}
+        {error && <p className="api-error" role="alert">{error}</p>}
         <div className="suggestion-row" aria-label="Example questions">
           {['How do fractions work?', 'Can you show me multiplication?', 'What is a number line?'].map((suggestion) => (
-            <button key={suggestion} className="suggestion-chip" type="button" onClick={() => setQuestion(suggestion)}>
+            <button
+              key={suggestion}
+              className="suggestion-chip"
+              type="button"
+              disabled={isSending}
+              onClick={() => setQuestion(suggestion)}
+            >
               {suggestion}
             </button>
           ))}
@@ -158,15 +257,117 @@ function LearnerTutorPage() {
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="Type your question here…"
             rows={2}
+            disabled={isSending}
           />
           <div className="form-footer">
-            <span>Ask anything about maths</span>
-            <button className="button button-primary learner-button" type="submit">Send question <span aria-hidden="true">↑</span></button>
+            <span>Requests are sent as standalone questions</span>
+            <button
+              className="button button-primary learner-button"
+              type="submit"
+              disabled={isSending || !question.trim()}
+            >
+              {isSending ? 'Sending…' : 'Send question'} <span aria-hidden="true">↑</span>
+            </button>
           </div>
         </form>
-        {notice && <p className="inline-notice" role="status">{notice}</p>}
       </section>
     </LearnerLayout>
+  )
+}
+
+function VerificationNotice({ verification }: { verification: VerificationResult }) {
+  let message: string
+  if (verification.check === 'evidence_references') {
+    if (verification.reference_status === 'passed') {
+      message =
+        'Evidence references are valid; whether they support each claim is not verified.'
+    } else if (verification.reference_status === 'failed') {
+      message =
+        `Evidence citation check failed after ${verification.refinement_attempts ?? 0} correction attempt(s). Claim accuracy is not verified.`
+    } else {
+      message =
+        'No retrieved evidence was available. This answer was not generated from curriculum evidence.'
+    }
+  } else if (verification.status === 'passed') {
+    message =
+      'Arithmetic result check passed. The explanation and reasoning are not verified.'
+  } else if (verification.status === 'failed') {
+    message = 'Arithmetic result check failed. Please review this answer.'
+  } else {
+    message =
+      'Not checked by the arithmetic verifier; this does not mean the answer is verified.'
+  }
+
+  return (
+    <div className={`verification-notice ${verification.status}`} role="status">
+      {message}
+    </div>
+  )
+}
+
+function RetrievalDetails({
+  materials,
+  trace,
+}: {
+  materials: RetrievedMaterial[]
+  trace?: RetrievalTrace
+}) {
+  return (
+    <details className="retrieval-details">
+      <summary>Inspect retrieval details (not a proof of correctness)</summary>
+      {trace?.vector_search && (
+        <div className="trace-summary">
+          <strong>Material search:</strong> {trace.vector_search.hit_count ?? materials.length} result(s)
+          {' · '}status: {trace.vector_search.status ?? 'unknown'}
+          {trace.vector_search.minimum_score != null
+            ? ` · minimum score: ${trace.vector_search.minimum_score}`
+            : ''}
+        </div>
+      )}
+      {materials.length > 0 ? (
+        <ul className="retrieved-material-list">
+          {materials.map((material, index) => (
+            <li key={`${material.id ?? material.title ?? 'material'}-${index}`}>
+              <strong>Evidence [M{index + 1}]</strong>
+              <strong>{material.title ?? 'Untitled material'}</strong>
+              <span>
+                {material.topic ?? 'Topic not specified'}
+                {material.grade != null ? ` · Primary ${material.grade}` : ''}
+                {material.score != null ? ` · score ${material.score}` : ''}
+              </span>
+              {material.content && <p>{material.content}</p>}
+              <span>
+                Source: {material.source_title ?? 'not recorded'}
+                {material.source_page ? ` · page ${material.source_page}` : ''}
+                {material.source_status ? ` · ${material.source_status}` : ''}
+              </span>
+              {material.source_url && (
+                <a href={material.source_url} target="_blank" rel="noreferrer">
+                  Open source
+                </a>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="trace-empty">No vector materials were returned.</p>
+      )}
+      {trace?.graph_lookup && (
+        <div className="graph-trace">
+          <strong>
+            {trace.graph_lookup.status === 'found'
+              ? 'Graph evidence [G1] · lookup:'
+              : 'Graph lookup:'}
+          </strong>{' '}
+          {trace.graph_lookup.status ?? 'unknown'}
+          {trace.graph_lookup.topic ? ` · ${trace.graph_lookup.topic}` : ''}
+          {trace.graph_lookup.node_id ? ` · node ${trace.graph_lookup.node_id}` : ''}
+          {trace.graph_lookup.provenance_status === 'not_recorded' && (
+            <p>Source provenance for this graph node is not recorded.</p>
+          )}
+        </div>
+      )}
+    </details>
   )
 }
 

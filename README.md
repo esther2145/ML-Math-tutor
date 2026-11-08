@@ -56,8 +56,9 @@ npm run dev
 ```
 
 The frontend currently provides navigable learner and teacher interface
-previews. Chat and teacher requests are not connected to FastAPI yet. See
-`frontend/README.md` for the current prototype scope.
+previews. Learner chat at `/learn` connects to `POST /tutor/ask` through Vite's
+local development proxy. Start FastAPI separately at `http://127.0.0.1:8000`.
+Teacher requests are not connected yet. See `frontend/README.md` for details.
 
 ## Local development
 

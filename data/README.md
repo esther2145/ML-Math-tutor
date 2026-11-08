@@ -96,18 +96,29 @@ four kinds of cases separate:
   does not implement a checked abstention policy yet.
 - `blocked_pending_source`: curriculum questions that cannot be scored until an
   approved, reusable curriculum source is added and reviewed.
-- `manual_source_review`: concise document-specific facts from the user-
-  authorized P7 2012 PDF with a pinpoint page reference. These should be
-  checked by a reviewer against that edition and must not be described as
-  current curriculum without newer evidence.
+- `manually_verified_source_fact`: concise document-specific facts from the
+  user-authorized P7 2012 PDF, manually checked against a pinpoint page. These
+  describe that edition only; they must not be presented as current curriculum
+  without newer evidence.
 
 Run `python -m pytest -q tests/test_evaluation_dataset.py` from the repository
 root to validate the dataset and arithmetic ground truth. Do not combine these
 categories into one accuracy score: arithmetic solver correctness, evidence
 coverage, and abstention behavior need separate measures. This starter set
-validates test data and deterministic arithmetic, with one manually sourced P7
-fact for review. It does not yet measure LLM hallucinations or demonstrate that
-graph retrieval improves answers.
+validates test data and deterministic arithmetic, with one manually checked P7
+fact. It does not yet execute the tutor against curriculum facts, measure LLM
+hallucinations, or demonstrate that graph retrieval improves answers.
+
+To evaluate the live tutor against the manually checked fact list, start the
+backend and its configured services, then run
+`python -m backend.evaluation_service` from the repository root. The evaluator
+submits each `manually_verified_source_fact` case to `/tutor/ask` and reports
+expected-item coverage, missing items, citation-reference status, and retrieved
+source titles. Coverage only measures whether expected list items appear in
+the answer; it does not detect unsupported extra claims or prove that retrieved
+sources support the answer. Keep this score separate from arithmetic and
+citation-reference checks. The current P7 case describes the supplied 2012
+document only.
 
 ## Inspecting runtime retrieval
 
@@ -125,9 +136,13 @@ those sources. The Streamlit source expander displays this trace when
 
 ## Live verification status
 
-The live tutor response now includes a `verification` result. The arithmetic
+The live tutor response includes a `verification` result. The arithmetic
 branch checks the deterministic answer against the question and reports
-`passed` or `failed`. For generated explanations outside the solver's supported
-arithmetic scope, it reports `not_checked`. This is not a curriculum evidence
-or reasoning verifier, and no refinement attempt is performed yet. The UI
-states this limitation instead of presenting `not_checked` as verified.
+`passed` or `failed`. For non-arithmetic answers, the tutor cites retrieved
+evidence IDs and checks that citations refer to available evidence and that
+each response sentence includes a citation. One correction attempt is made
+when this citation check fails; if the correction still fails, the tutor
+abstains instead of displaying the unchecked draft. Passing the citation check
+does **not** show that the cited evidence supports the claims; semantic
+correctness remains `not_checked`. If no evidence is retrieved, the tutor
+abstains instead of generating an unsupported curriculum answer.

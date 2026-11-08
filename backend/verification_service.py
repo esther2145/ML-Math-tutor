@@ -1,6 +1,7 @@
 
 import re
 from decimal import Decimal
+from typing import Any
 
 from .math_service import solve_arithmetic_question
 
@@ -81,6 +82,62 @@ def verify_arithmetic_answer(
             else "The expected numerical result was not "
                  "found in the generated answer."
         ),
+    }
+
+
+def verify_evidence_references(
+    answer: str,
+    evidence_ids: list[str],
+) -> dict[str, Any]:
+    """Validate citation IDs and per-sentence citation coverage only."""
+
+    if not evidence_ids:
+        return {
+            "status": "not_checked",
+            "check": "evidence_references",
+            "reference_status": "not_checkable",
+            "reason": "No retrieved evidence was available to cite.",
+            "invalid_references": [],
+            "uncited_claim_count": 0,
+        }
+
+    citation_pattern = re.compile(r"\[((?:M|G)\d+)\]")
+    known_ids = set(evidence_ids)
+    citations = citation_pattern.findall(answer)
+    invalid_references = sorted(set(citations) - known_ids)
+    claim_units = [
+        unit.strip()
+        for unit in re.split(
+            r"(?<=[.!?])\s+(?!\[(?:M|G)\d+\])|\r?\n+",
+            answer,
+        )
+        if unit.strip() and not unit.lstrip().startswith("#")
+    ]
+    uncited_claim_count = sum(
+        not citation_pattern.search(unit)
+        for unit in claim_units
+    )
+    reference_status = (
+        "failed"
+        if invalid_references or uncited_claim_count or not claim_units or not citations
+        else "passed"
+    )
+
+    return {
+        "status": "not_checked",
+        "check": "evidence_references",
+        "reference_status": reference_status,
+        "reason": (
+            "Citation IDs are available and every response sentence includes "
+            "a citation. This does not verify that the evidence supports the "
+            "claims."
+            if reference_status == "passed"
+            else "The answer is empty or contains invalid evidence IDs or "
+                 "sentences without citations. Claim accuracy is not checked."
+        ),
+        "evidence_ids": sorted(set(citations) & known_ids),
+        "invalid_references": invalid_references,
+        "uncited_claim_count": uncited_claim_count,
     }
 
 

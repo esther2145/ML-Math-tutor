@@ -169,7 +169,26 @@ if question:
             verification = result.get("verification")
             if verification:
                 status = verification.get("status")
-                if status == "passed":
+                if verification.get("check") == "evidence_references":
+                    reference_status = verification.get("reference_status")
+                    if reference_status == "passed":
+                        st.info(
+                            "Evidence references are valid; this does not "
+                            "verify that the evidence supports every claim."
+                        )
+                    elif reference_status == "failed":
+                        st.warning(
+                            "Evidence citation check failed after "
+                            f"{verification.get('refinement_attempts', 0)} "
+                            "correction attempt(s). Claim accuracy is not "
+                            "verified."
+                        )
+                    else:
+                        st.info(
+                            "No retrieved evidence was available. This answer "
+                            "was not generated from curriculum evidence."
+                        )
+                elif status == "passed":
                     st.success(
                         "Arithmetic result check passed. "
                         "This does not verify the full explanation."
@@ -219,7 +238,7 @@ if question:
                         )
 
                     if result.get("graph_context"):
-                        st.write("### Knowledge graph context")
+                        st.write("### Knowledge graph evidence [G1]")
                         st.json(result["graph_context"])
 
                     if result.get("retrieval_trace"):
@@ -236,7 +255,8 @@ if question:
                             "### Retrieved learning materials"
                         )
 
-                        for material in materials:
+                        for index, material in enumerate(materials, start=1):
+                            st.caption(f"Evidence [M{index}]")
                             st.write(
                                 f"**{material.get('title')}**"
                             )
