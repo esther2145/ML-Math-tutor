@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .advanced_graph_loader import load_complete_graph
 from .database import create_basic_math_graph, test_connection
@@ -10,6 +10,7 @@ from .graph_service import (
         search_topics,
 )
 from .hybrid_tutor_service import answer_math_question
+from .lesson_planning_service import BloomLevel, generate_lesson_plan
 from .ollama_service import generate_response, test_ollama_connection
 from .tutor_service import explain_topic
 from .vector_service import (
@@ -39,6 +40,15 @@ class TutorQuestionRequest(BaseModel):
     learner_grade: int | None = None
     result_limit: int = 3
     country_code: str | None = None
+
+class LessonPlanRequest(BaseModel):
+    topic: str = Field(max_length=160)
+    learner_grade: int = Field(ge=1, le=7)
+    duration_minutes: int = Field(ge=20, le=120)
+    bloom_level: BloomLevel
+    competency: str = Field(max_length=500)
+    assessment_criteria: str = Field(max_length=500)
+    country_code: str = Field(default="UG", min_length=2, max_length=2)
 
 class GraphSearchRequest(BaseModel):
     search_text: str
@@ -268,6 +278,48 @@ def ask_tutor(request: TutorQuestionRequest):
         raise HTTPException(
             status_code=500,
             detail=f"The tutor could not answer the question: {error}",
+        ) from error
+
+
+@app.post("/teacher/lesson-plan")
+def create_teacher_lesson_plan(request: LessonPlanRequest):
+    topic = request.topic.strip()
+    competency = request.competency.strip()
+    assessment_criteria = request.assessment_criteria.strip()
+    country_code = request.country_code.strip().upper()
+
+    if not topic:
+        raise HTTPException(status_code=400, detail="The topic cannot be empty.")
+    if len(competency) < 5:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide a measurable learner competency.",
+        )
+    if len(assessment_criteria) < 5:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide assessment criteria or success evidence.",
+        )
+    if not country_code.isascii() or not country_code.isalpha():
+        raise HTTPException(
+            status_code=400,
+            detail="Country code must be a two-letter ISO code.",
+        )
+
+    try:
+        return generate_lesson_plan(
+            topic=topic,
+            learner_grade=request.learner_grade,
+            duration_minutes=request.duration_minutes,
+            bloom_level=request.bloom_level,
+            competency=competency,
+            assessment_criteria=assessment_criteria,
+            country_code=country_code,
+        )
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Could not generate the lesson draft: {error}",
         ) from error
 
 @app.get("/graph/topic/{topic_name}")

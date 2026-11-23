@@ -9,17 +9,74 @@ import {
 } from 'react-router-dom'
 import {
   askTutor,
+  generateLessonPlan,
+  type BloomLevel,
+  type LessonPlanResponse,
   type RetrievedMaterial,
   type RetrievalTrace,
   type VerificationResult,
 } from './services/tutorApi'
 import './App.css'
 
-const practiceQuestion = {
-  prompt: 'A garden has 3 rows of flowers. There are 7 flowers in each row. How many flowers are there?',
-  answer: '21',
-  hint: 'Think of 3 equal groups of 7: 7 + 7 + 7.',
+type PracticeQuestion = {
+  topic: string
+  prompt: string
+  answer: string
+  hint: string
+  visualLabel: string
+  rows: { label: string; count: number; removedCount?: number }[]
+  success: string
 }
+
+const practiceQuestions: PracticeQuestion[] = [
+  {
+    topic: 'Multiplication',
+    prompt: 'A garden has 3 rows of flowers. There are 7 flowers in each row. How many flowers are there?',
+    answer: '21',
+    hint: 'Count 7 flowers in each of 3 rows: 7 + 7 + 7.',
+    visualLabel: 'Three rows of seven flowers each.',
+    rows: [
+      { label: 'Row 1', count: 7 },
+      { label: 'Row 2', count: 7 },
+      { label: 'Row 3', count: 7 },
+    ],
+    success: 'That’s right! Three groups of 7 make 21.',
+  },
+  {
+    topic: 'Addition',
+    prompt: 'Mia has 8 red beads and 5 blue beads. How many beads does she have altogether?',
+    answer: '13',
+    hint: 'Put the two groups together: 8 + 5.',
+    visualLabel: 'A group of eight red beads and a group of five blue beads.',
+    rows: [
+      { label: 'Red beads', count: 8 },
+      { label: 'Blue beads', count: 5 },
+    ],
+    success: 'Correct! 8 beads and 5 beads make 13.',
+  },
+  {
+    topic: 'Subtraction',
+    prompt: 'There are 14 apples in a basket. If 6 are given away, how many are left?',
+    answer: '8',
+    hint: 'Start with 14 and take away the 6 crossed-out apples.',
+    visualLabel: 'Fourteen apples, with six crossed out.',
+    rows: [{ label: 'Apples', count: 14, removedCount: 6 }],
+    success: 'That’s right! 8 apples are left.',
+  },
+  {
+    topic: 'Division',
+    prompt: 'Share 12 oranges equally between 3 baskets. How many oranges go in each basket?',
+    answer: '4',
+    hint: 'Share the oranges equally so each basket has the same number.',
+    visualLabel: 'Three baskets with four oranges shared into each basket.',
+    rows: [
+      { label: 'Basket 1', count: 4 },
+      { label: 'Basket 2', count: 4 },
+      { label: 'Basket 3', count: 4 },
+    ],
+    success: 'Correct! Each basket gets 4 oranges.',
+  },
+]
 
 const lessonSections = [
   ['Learning objectives', 'By the end of the lesson, learners can…'],
@@ -372,46 +429,122 @@ function RetrievalDetails({
 }
 
 function PracticePage() {
+  const [questionIndex, setQuestionIndex] = useState(0)
   const [answer, setAnswer] = useState('')
   const [feedback, setFeedback] = useState<'correct' | 'try-again' | ''>('')
+  const question = practiceQuestions[questionIndex]
 
   function checkAnswer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setFeedback(answer.trim() === practiceQuestion.answer ? 'correct' : 'try-again')
+    setFeedback(answer.trim() === question.answer ? 'correct' : 'try-again')
+  }
+
+  function moveToNextQuestion() {
+    setQuestionIndex((current) => current + 1)
+    setAnswer('')
+    setFeedback('')
+  }
+
+  function restartPractice() {
+    setQuestionIndex(0)
+    setAnswer('')
+    setFeedback('')
   }
 
   return (
     <LearnerLayout>
-      <div className="preview-banner"><span aria-hidden="true">ⓘ</span> Sample exercise · answers are checked in this browser only</div>
+      <div className="preview-banner"><span aria-hidden="true">ⓘ</span> Guided exercises · answers are checked in this browser only</div>
       <div className="page-heading learner-heading">
         <span className="eyebrow">GUIDED PRACTICE</span>
         <h1>Try it your way.</h1>
         <p>Work through a question, and use the hint if you need a nudge.</p>
       </div>
       <section className="practice-card">
-        <div className="exercise-meta"><span>Sample question</span><span>Multiplication</span></div>
-        <div className="array-visual" aria-label="Three groups of seven dots">
-          {[0, 1, 2].map((row) => (
-            <div className="dot-row" key={row}>
-              {Array.from({ length: 7 }, (_, dot) => <span className="math-dot" key={dot} />)}
+        {question ? (
+          <>
+            <div className="exercise-meta">
+              <span>Question {questionIndex + 1} of {practiceQuestions.length}</span>
+              <span>{question.topic}</span>
             </div>
-          ))}
-        </div>
-        <h2>{practiceQuestion.prompt}</h2>
-        <form className="practice-form" onSubmit={checkAnswer}>
-          <label htmlFor="practice-answer">Your answer</label>
-          <div className="answer-row">
-            <input id="practice-answer" inputMode="numeric" value={answer} onChange={(event) => setAnswer(event.target.value)} placeholder="Type a number" />
-            <button className="button button-primary learner-button" type="submit">Check answer</button>
+            <progress
+              className="practice-progress"
+              value={questionIndex + 1}
+              max={practiceQuestions.length}
+              aria-label={`Question ${questionIndex + 1} of ${practiceQuestions.length}`}
+            />
+            <div className="array-visual" role="img" aria-label={question.visualLabel}>
+              {question.rows.map((row) => (
+                <div className="dot-group" key={row.label}>
+                  <span className="dot-group-label">{row.label}</span>
+                  <div className="dot-row" aria-hidden="true">
+                    {Array.from({ length: row.count }, (_, dot) => (
+                      <span
+                        className={`math-dot${dot < (row.removedCount ?? 0) ? ' removed' : ''}`}
+                        key={dot}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <h2>{question.prompt}</h2>
+            <form className="practice-form" onSubmit={checkAnswer}>
+              <label htmlFor="practice-answer">Your answer</label>
+              <div className="answer-row">
+                <input
+                  id="practice-answer"
+                  inputMode="numeric"
+                  value={answer}
+                  onChange={(event) => setAnswer(event.target.value)}
+                  placeholder="Type a number"
+                  disabled={feedback === 'correct'}
+                />
+                <button
+                  className="button button-primary learner-button"
+                  type="submit"
+                  disabled={!answer.trim() || feedback === 'correct'}
+                >
+                  Check answer
+                </button>
+              </div>
+            </form>
+            <details className="hint-panel">
+              <summary>I'd like a hint</summary>
+              <p>{question.hint}</p>
+            </details>
+            {feedback === 'correct' && (
+              <>
+                <p className="feedback success" role="status">{question.success}</p>
+                <button
+                  className="button button-primary practice-next"
+                  type="button"
+                  onClick={moveToNextQuestion}
+                >
+                  Next question <span aria-hidden="true">→</span>
+                </button>
+              </>
+            )}
+            {feedback === 'try-again' && (
+              <p className="feedback encouragement" role="status">
+                Not quite yet. Try counting the groups, or open the hint above.
+              </p>
+            )}
+          </>
+        ) : (
+          <div className="practice-complete" role="status">
+            <span className="eyebrow">PRACTICE COMPLETE</span>
+            <h2>Nice work!</h2>
+            <p>You’ve tried all {practiceQuestions.length} visual questions.</p>
+            <button
+              className="button button-primary"
+              type="button"
+              onClick={restartPractice}
+            >
+              Practise again
+            </button>
           </div>
-        </form>
-        <details className="hint-panel">
-          <summary>I'd like a hint</summary>
-          <p>{practiceQuestion.hint}</p>
-        </details>
-        {feedback === 'correct' && <p className="feedback success" role="status">That's right! You found 3 groups of 7.</p>}
-        {feedback === 'try-again' && <p className="feedback encouragement" role="status">Not quite yet. Try counting the groups, or open the hint above.</p>}
-        <p className="small-print">This sample exercise does not save scores or learner progress.</p>
+        )}
+        <p className="small-print">These sample exercises are checked in this browser only. Scores and progress are not saved.</p>
       </section>
     </LearnerLayout>
   )
@@ -499,10 +632,49 @@ function LessonOutlinePage() {
   const [topic, setTopic] = useState('')
   const [grade, setGrade] = useState('Primary 4')
   const [duration, setDuration] = useState('40 minutes')
+  const [bloomLevel, setBloomLevel] = useState<BloomLevel>('Apply')
+  const [competency, setCompetency] = useState('')
+  const [assessmentEvidence, setAssessmentEvidence] = useState('')
+  const [lessonPlan, setLessonPlan] = useState<LessonPlanResponse | null>(null)
+  const [generationError, setGenerationError] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+
+  async function createLessonPlan() {
+    if (!topic.trim() || !competency.trim() || !assessmentEvidence.trim()) {
+      setGenerationError(
+        'Enter a topic, measurable competency, and assessment criteria before generating.',
+      )
+      return
+    }
+
+    setGenerationError('')
+    setLessonPlan(null)
+    setIsGenerating(true)
+    try {
+      const result = await generateLessonPlan({
+        topic: topic.trim(),
+        learner_grade: Number(grade.replace('Primary ', '')),
+        duration_minutes: Number.parseInt(duration, 10),
+        bloom_level: bloomLevel,
+        competency: competency.trim(),
+        assessment_criteria: assessmentEvidence.trim(),
+        country_code: 'UG',
+      })
+      setLessonPlan(result)
+    } catch (error) {
+      setGenerationError(
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred while generating the lesson draft.',
+      )
+    } finally {
+      setIsGenerating(false)
+    }
+  }
 
   return (
     <TeacherLayout>
-      <div className="preview-banner teacher-banner"><span aria-hidden="true">ⓘ</span> Editable template · sample text only, not generated lesson content</div>
+      <div className="preview-banner teacher-banner"><span aria-hidden="true">ⓘ</span> AI-generated lesson drafts require teacher review and curriculum checking</div>
       <div className="page-heading teacher-heading">
         <span className="eyebrow">LESSON PLANNER</span>
         <h1>Shape a lesson outline.</h1>
@@ -513,12 +685,88 @@ function LessonOutlinePage() {
           <label>Topic<input value={topic} onChange={(event) => setTopic(event.target.value)} placeholder="e.g. Equivalent fractions" /></label>
           <label>Level<select value={grade} onChange={(event) => setGrade(event.target.value)}>{Array.from({ length: 7 }, (_, index) => `Primary ${index + 1}`).map((level) => <option key={level}>{level}</option>)}</select></label>
           <label>Duration<select value={duration} onChange={(event) => setDuration(event.target.value)}>{['30 minutes', '40 minutes', '60 minutes'].map((time) => <option key={time}>{time}</option>)}</select></label>
+          <label>Bloom's cognitive level
+            <select
+              value={bloomLevel}
+              onChange={(event) => {
+                const selectedLevel = event.target.value
+                if (
+                  selectedLevel === 'Remember' ||
+                  selectedLevel === 'Understand' ||
+                  selectedLevel === 'Apply' ||
+                  selectedLevel === 'Analyse' ||
+                  selectedLevel === 'Evaluate' ||
+                  selectedLevel === 'Create'
+                ) {
+                  setBloomLevel(selectedLevel)
+                }
+              }}
+            >
+              {['Remember', 'Understand', 'Apply', 'Analyse', 'Evaluate', 'Create'].map((level) => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="competency-planner">
+          <label htmlFor="lesson-competency">Learner competency / measurable outcome</label>
+          <textarea
+            id="lesson-competency"
+            rows={2}
+            value={competency}
+            onChange={(event) => setCompetency(event.target.value)}
+            placeholder="By the end of the lesson, learners will be able to…"
+          />
+          <p>Describe what learners will demonstrate, not only what the teacher will cover.</p>
+          <label htmlFor="assessment-evidence">Assessment evidence / success criteria</label>
+          <textarea
+            id="assessment-evidence"
+            rows={2}
+            value={assessmentEvidence}
+            onChange={(event) => setAssessmentEvidence(event.target.value)}
+            placeholder="What will learners do or produce to show this competency?"
+          />
+          <p>Example: Solve 4 out of 5 equivalent-fraction problems and explain one method.</p>
         </div>
         <div className="lesson-title">
-          <span className="eyebrow">{grade} · {duration}</span>
+          <span className="eyebrow">{grade} · {duration} · Bloom: {bloomLevel}</span>
           <h2>{topic || 'Untitled lesson'}</h2>
-          <p>Editable sample outline — lesson generation is not connected.</p>
+          <p>Competency-based planning template — suggestions are teacher-entered and need curriculum review.</p>
+          {competency && <p><strong>Target competency:</strong> {competency}</p>}
+          {assessmentEvidence && <p><strong>Evidence of learning:</strong> {assessmentEvidence}</p>}
         </div>
+        <div className="lesson-generation-controls">
+          <button
+            className="button button-dark"
+            type="button"
+            onClick={createLessonPlan}
+            disabled={isGenerating}
+          >
+            {isGenerating ? 'Generating draft…' : 'Generate lesson draft'}
+          </button>
+          {generationError && <p className="api-error" role="alert">{generationError}</p>}
+        </div>
+        {lessonPlan && (
+          <section className="generated-lesson" aria-live="polite">
+            <h3>AI-generated draft · review before use</h3>
+            <p>
+              {lessonPlan.evidence_status === 'reviewed_materials_retrieved'
+                ? 'Reviewed curriculum material was retrieved. Check every suggested activity against your curriculum.'
+                : 'No reviewed Uganda curriculum material was retrieved. This is a general draft, not a curriculum-validated lesson.'}
+            </p>
+            <pre>{lessonPlan.lesson_plan}</pre>
+            {lessonPlan.retrieved_materials.length > 0 && (
+              <ul>
+                {lessonPlan.retrieved_materials.map((material, index) => (
+                  <li key={`${material.id ?? material.title ?? 'source'}-${index}`}>
+                    [M{index + 1}] {material.source_title ?? material.title ?? 'Reviewed material'}
+                    {material.source_page ? ` · page ${material.source_page}` : ''}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
         <div className="lesson-sections">
           {lessonSections.map(([title, placeholder], index) => (
             <label className="lesson-section" key={title}>

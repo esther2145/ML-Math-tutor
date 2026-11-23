@@ -83,3 +83,68 @@ def test_graph_topic_returns_404_when_topic_is_unknown(monkeypatch):
     response = client.get("/graph/topic/Unknown")
 
     assert response.status_code == 404
+
+
+def test_teacher_lesson_plan_endpoint_passes_validated_inputs(monkeypatch):
+    captured = {}
+
+    def fake_generate_lesson_plan(**arguments):
+        captured.update(arguments)
+        return {"lesson_plan": "Draft", "teacher_review_required": True}
+
+    monkeypatch.setattr(main, "generate_lesson_plan", fake_generate_lesson_plan)
+    response = client.post(
+        "/teacher/lesson-plan",
+        json={
+            "topic": "Equivalent fractions",
+            "learner_grade": 4,
+            "duration_minutes": 40,
+            "bloom_level": "Apply",
+            "competency": "Represent equivalent fractions with diagrams.",
+            "assessment_criteria": "Correctly solve four of five examples.",
+            "country_code": "ug",
+        },
+    )
+
+    assert response.status_code == 200
+    assert captured == {
+        "topic": "Equivalent fractions",
+        "learner_grade": 4,
+        "duration_minutes": 40,
+        "bloom_level": "Apply",
+        "competency": "Represent equivalent fractions with diagrams.",
+        "assessment_criteria": "Correctly solve four of five examples.",
+        "country_code": "UG",
+    }
+
+
+def test_teacher_lesson_plan_rejects_invalid_bloom_level():
+    response = client.post(
+        "/teacher/lesson-plan",
+        json={
+            "topic": "Addition",
+            "learner_grade": 2,
+            "duration_minutes": 30,
+            "bloom_level": "MemoriseEverything",
+            "competency": "Explain addition with objects.",
+            "assessment_criteria": "Answer four practice questions.",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_teacher_lesson_plan_rejects_blank_competency():
+    response = client.post(
+        "/teacher/lesson-plan",
+        json={
+            "topic": "Addition",
+            "learner_grade": 2,
+            "duration_minutes": 30,
+            "bloom_level": "Understand",
+            "competency": "   ",
+            "assessment_criteria": "Answer four practice questions.",
+        },
+    )
+
+    assert response.status_code == 400

@@ -57,8 +57,13 @@ npm run dev
 
 The frontend currently provides navigable learner and teacher interface
 previews. Learner chat at `/learn` connects to `POST /tutor/ask` through Vite's
-local development proxy. Start FastAPI separately at `http://127.0.0.1:8000`.
-Teacher requests are not connected yet. See `frontend/README.md` for details.
+local development proxy. The teacher lesson planner at `/teacher/lesson`
+calls `POST /teacher/lesson-plan` to draft a lesson from the entered topic,
+grade, duration, Bloom level, learner competency, and assessment criteria.
+Reviewed country-scoped materials are used when available; otherwise the
+result is labeled a general draft rather than curriculum-validated content.
+Start FastAPI separately at `http://127.0.0.1:8000`. See
+`frontend/README.md` for details.
 
 ## Local development
 

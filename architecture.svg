@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="900" viewBox="0 0 1280 900" role="img" aria-labelledby="title description">
+  <title id="title">G-RAFT prototype architecture</title>
+  <desc id="description">Architecture showing React and Streamlit clients calling FastAPI, which handles deterministic arithmetic or retrieves curriculum context from Qdrant and optional Neo4j before Ollama generation and citation-reference checking. Evaluation tools are shown separately.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#65738b"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#45845f"/>
+    </marker>
+    <style>
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #26334b; }
+      .title { font-size: 30px; font-weight: 700; }
+      .subtitle { font-size: 14px; fill: #667187; }
+      .section { font-size: 13px; font-weight: 700; letter-spacing: 1.2px; fill: #65738b; }
+      .heading { font-size: 17px; font-weight: 700; }
+      .body { font-size: 13px; fill: #536078; }
+      .small { font-size: 11px; fill: #657187; }
+      .box { stroke-width: 1.5; rx: 12; }
+      .flow { fill: none; stroke: #65738b; stroke-width: 2; marker-end: url(#arrow); }
+      .result { fill: none; stroke: #45845f; stroke-width: 2; marker-end: url(#arrowGreen); }
+      .optional { fill: none; stroke: #8792a4; stroke-width: 1.7; stroke-dasharray: 6 5; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1280" height="900" fill="#f7f8fb"/>
+  <text x="54" y="58" class="title">G-RAFT | Prototype Architecture</text>
+  <text x="55" y="86" class="subtitle">Learner interfaces → API orchestration → retrieval, generation, and bounded verification</text>
+
+  <text x="60" y="139" class="section">LEARNER INTERFACES</text>
+  <text x="390" y="139" class="section">BACKEND DECISION FLOW</text>
+  <text x="900" y="139" class="section">LOCAL SERVICES &amp; DATA</text>
+
+  <rect x="55" y="165" width="270" height="135" class="box" fill="#fff" stroke="#d7deeb"/>
+  <rect x="75" y="185" width="44" height="44" rx="10" fill="#eef1f8"/>
+  <text x="97" y="214" text-anchor="middle" font-size="24" font-weight="700" fill="#64759b">R</text>
+  <text x="135" y="202" class="heading">React learner app</text>
+  <text x="135" y="225" class="body">Ask tutor + guided practice</text>
+  <text x="75" y="263" class="small">Vite /api proxy → FastAPI</text>
+  <text x="75" y="282" class="small">Practice questions checked locally</text>
+
+  <rect x="55" y="335" width="270" height="120" class="box" fill="#fff" stroke="#d7deeb"/>
+  <rect x="75" y="355" width="44" height="44" rx="10" fill="#fff3e4"/>
+  <text x="97" y="384" text-anchor="middle" font-size="21" font-weight="700" fill="#bd873a">S</text>
+  <text x="135" y="371" class="heading">Streamlit app</text>
+  <text x="135" y="394" class="body">Alternative tutor interface</text>
+  <text x="75" y="433" class="small">Calls the same tutoring API</text>
+
+  <rect x="380" y="165" width="470" height="85" class="box" fill="#eaf0fb" stroke="#b8c8e5"/>
+  <text x="615" y="198" text-anchor="middle" class="heading">FastAPI · POST /tutor/ask</text>
+  <text x="615" y="223" text-anchor="middle" class="body">Validates question, grade, country and result limit</text>
+
+  <path d="M325 230 H380" class="flow"/>
+  <path d="M325 395 H350 V208 H380" class="flow"/>
+
+  <rect x="415" y="280" width="400" height="82" class="box" fill="#fff" stroke="#cfd6e2"/>
+  <text x="615" y="313" text-anchor="middle" class="heading">Question routing</text>
+  <text x="615" y="338" text-anchor="middle" class="body">Supported explicit arithmetic?</text>
+  <path d="M615 250 V280" class="flow"/>
+
+  <rect x="385" y="395" width="205" height="135" class="box" fill="#edf7ef" stroke="#b9d8c0"/>
+  <text x="487" y="427" text-anchor="middle" class="heading">Arithmetic path</text>
+  <text x="405" y="455" class="body">Deterministic solver</text>
+  <text x="405" y="477" class="body">Check final result</text>
+  <text x="405" y="507" class="small">Retrieval and LLM skipped</text>
+
+  <rect x="630" y="395" width="220" height="135" class="box" fill="#fff8eb" stroke="#e8d2a9"/>
+  <text x="740" y="427" text-anchor="middle" class="heading">Non-arithmetic path</text>
+  <text x="650" y="455" class="body">Retrieve curriculum evidence</text>
+  <text x="650" y="477" class="body">Optional graph topic lookup</text>
+  <text x="650" y="507" class="small">Grade / country filters apply</text>
+
+  <path d="M550 362 V378 H487 V395" class="result"/>
+  <text x="410" y="381" class="small" fill="#45845f">Yes</text>
+  <path d="M680 362 V378 H740 V395" class="flow"/>
+  <text x="785" y="381" class="small">No</text>
+
+  <rect x="630" y="570" width="220" height="102" class="box" fill="#f2edfa" stroke="#d1c2e6"/>
+  <text x="740" y="602" text-anchor="middle" class="heading">Ollama generation</text>
+  <text x="650" y="629" class="body">Uses supplied context</text>
+  <text x="650" y="650" class="small">Runs only when evidence exists</text>
+  <path d="M740 530 V570" class="flow"/>
+
+  <rect x="385" y="570" width="205" height="102" class="box" fill="#eef4fa" stroke="#c3d2e3"/>
+  <text x="487" y="602" text-anchor="middle" class="heading">Reference check</text>
+  <text x="405" y="629" class="body">Citation IDs + sentence coverage</text>
+  <text x="405" y="650" class="small">One retry; then abstain on failure</text>
+  <path d="M630 621 H590" class="flow"/>
+  <path d="M487 530 V570" class="flow"/>
+
+  <rect x="385" y="715" width="465" height="78" class="box" fill="#edf7ef" stroke="#b9d8c0"/>
+  <text x="617" y="747" text-anchor="middle" class="heading">Response to learner</text>
+  <text x="617" y="772" text-anchor="middle" class="body">Answer + verification status + retrieval trace / sources</text>
+  <path d="M487 672 V695 H617 V715" class="result"/>
+  <path d="M740 672 V695 H617" class="result"/>
+  <path d="M385 754 H345 V300 H325" class="result"/>
+
+  <rect x="900" y="165" width="325" height="148" class="box" fill="#fff" stroke="#cad2df"/>
+  <circle cx="934" cy="199" r="13" fill="#6ba6c8"/>
+  <text x="960" y="205" class="heading">Qdrant · vector store</text>
+  <text x="925" y="238" class="body">Learning-material passages + metadata</text>
+  <text x="925" y="260" class="small">Similarity search; grade filtering</text>
+  <text x="925" y="280" class="small">Country search requires reviewed sources</text>
+  <path d="M850 440 H875 V239 H900" class="flow"/>
+  <path d="M900 298 H875 V468 H850" class="flow"/>
+
+  <rect x="900" y="350" width="325" height="148" class="box" fill="#fff" stroke="#cad2df"/>
+  <circle cx="934" cy="384" r="13" fill="#84a96b"/>
+  <text x="960" y="390" class="heading">Neo4j · knowledge graph</text>
+  <text x="925" y="423" class="body">Topics, relationships and curriculum facts</text>
+  <text x="925" y="445" class="small">Optional topic lookup for non-country requests</text>
+  <text x="925" y="465" class="small">Graph source provenance is not recorded</text>
+  <path d="M850 475 H900" class="optional"/>
+  <path d="M900 483 H875 V490 H850" class="optional"/>
+
+  <rect x="900" y="535" width="325" height="137" class="box" fill="#fff" stroke="#cad2df"/>
+  <circle cx="934" cy="569" r="13" fill="#8d7ac1"/>
+  <text x="960" y="575" class="heading">Ollama · local language model</text>
+  <text x="925" y="608" class="body">Generates contextual non-arithmetic answers</text>
+  <text x="925" y="630" class="small">No model call on deterministic arithmetic</text>
+  <path d="M850 620 H900" class="flow"/>
+
+  <rect x="900" y="710" width="325" height="100" class="box" fill="#fff" stroke="#d7deeb"/>
+  <text x="925" y="743" class="heading">Evaluation data &amp; tests</text>
+  <text x="925" y="768" class="body">Arithmetic cases + one manually checked P7 fact</text>
+  <text x="925" y="789" class="small">Coverage checks; not a measured hallucination rate</text>
+  <path d="M900 758 H875" class="optional"/>
+
+  <rect x="55" y="825" width="1170" height="48" rx="9" fill="#fff4e3" stroke="#ead5ad"/>
+  <text x="75" y="855" font-size="12" font-weight="700" fill="#7c633e">LIMITATION</text>
+  <text x="177" y="855" font-size="12" fill="#6f624e">Citation checks confirm reference IDs, not semantic support; broader factual verification and hallucination-reduction results remain future evaluation work.</text>
+</svg>

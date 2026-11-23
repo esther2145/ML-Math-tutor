@@ -50,6 +50,42 @@ export interface TutorResponse {
   retrieval_trace?: RetrievalTrace
 }
 
+export type BloomLevel =
+  | 'Remember'
+  | 'Understand'
+  | 'Apply'
+  | 'Analyse'
+  | 'Evaluate'
+  | 'Create'
+
+function isBloomLevel(value: unknown): value is BloomLevel {
+  return (
+    value === 'Remember' ||
+    value === 'Understand' ||
+    value === 'Apply' ||
+    value === 'Analyse' ||
+    value === 'Evaluate' ||
+    value === 'Create'
+  )
+}
+
+export interface LessonPlanRequest {
+  topic: string
+  learner_grade: number
+  duration_minutes: number
+  bloom_level: BloomLevel
+  competency: string
+  assessment_criteria: string
+  country_code: string
+}
+
+export interface LessonPlanResponse extends LessonPlanRequest {
+  lesson_plan: string
+  evidence_status: 'reviewed_materials_retrieved' | 'no_reviewed_materials'
+  teacher_review_required: true
+  retrieved_materials: RetrievedMaterial[]
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
@@ -225,4 +261,66 @@ export async function askTutor(
   }
 
   return result
+}
+
+export async function generateLessonPlan(
+  request: LessonPlanRequest,
+): Promise<LessonPlanResponse> {
+  let response: Response
+  try {
+    response = await fetch('/api/teacher/lesson-plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    })
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        'Could not reach the tutor API. Check that FastAPI is running at http://127.0.0.1:8000.',
+      )
+    }
+    throw error
+  }
+
+  const data: unknown = await response.json().catch(() => null)
+  if (!response.ok) {
+    const detail =
+      isRecord(data) && typeof data.detail === 'string'
+        ? data.detail
+        : `The tutor API returned an error (${response.status}).`
+    throw new Error(detail)
+  }
+
+  if (
+    !isRecord(data) ||
+    typeof data.topic !== 'string' ||
+    typeof data.learner_grade !== 'number' ||
+    typeof data.duration_minutes !== 'number' ||
+    !isBloomLevel(data.bloom_level) ||
+    typeof data.competency !== 'string' ||
+    typeof data.assessment_criteria !== 'string' ||
+    typeof data.country_code !== 'string' ||
+    typeof data.lesson_plan !== 'string' ||
+    (data.evidence_status !== 'reviewed_materials_retrieved' &&
+      data.evidence_status !== 'no_reviewed_materials') ||
+    data.teacher_review_required !== true ||
+    !Array.isArray(data.retrieved_materials) ||
+    !data.retrieved_materials.every(isRetrievedMaterial)
+  ) {
+    throw new Error('The tutor API returned an invalid lesson plan.')
+  }
+
+  return {
+    topic: data.topic,
+    learner_grade: data.learner_grade,
+    duration_minutes: data.duration_minutes,
+    bloom_level: data.bloom_level,
+    competency: data.competency,
+    assessment_criteria: data.assessment_criteria,
+    country_code: data.country_code,
+    lesson_plan: data.lesson_plan,
+    evidence_status: data.evidence_status,
+    teacher_review_required: true,
+    retrieved_materials: data.retrieved_materials,
+  }
 }

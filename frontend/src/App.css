@@ -678,18 +678,42 @@
   padding: 6px 10px;
 }
 
+.practice-progress {
+  accent-color: #e7a744;
+  display: block;
+  height: 6px;
+  margin-top: 14px;
+  width: 100%;
+}
+
 .array-visual {
   background: #fcf9f2;
   border-radius: 10px;
   margin: 23px 0;
+  max-width: 100%;
   padding: 18px;
   width: fit-content;
 }
 
+.dot-group {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.dot-group-label {
+  color: #737b89;
+  font-size: 10px;
+  min-width: 62px;
+}
+
 .dot-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 7px;
   margin: 6px 0;
+  max-width: 260px;
 }
 
 .math-dot {
@@ -697,6 +721,23 @@
   border-radius: 50%;
   height: 10px;
   width: 10px;
+}
+
+.math-dot.removed {
+  background: #c9cbd0;
+  opacity: 0.7;
+  position: relative;
+}
+
+.math-dot.removed::after {
+  background: #9c5149;
+  content: '';
+  height: 1px;
+  left: -2px;
+  position: absolute;
+  top: 4px;
+  transform: rotate(-45deg);
+  width: 14px;
 }
 
 .practice-card h2 {
@@ -776,6 +817,28 @@
 .feedback.encouragement {
   background: #fff4e3;
   color: #82633b;
+}
+
+.practice-next {
+  margin-top: 12px;
+}
+
+.practice-complete {
+  padding: 22px 0;
+}
+
+.practice-complete .eyebrow {
+  color: #697899;
+}
+
+.practice-complete h2 {
+  margin: 8px 0;
+}
+
+.practice-complete p {
+  color: #737b89;
+  font-size: 12px;
+  margin-bottom: 20px;
 }
 
 .small-print {
@@ -866,7 +929,7 @@
 .lesson-settings {
   display: grid;
   gap: 12px;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr;
 }
 
 .lesson-settings input,
@@ -874,6 +937,89 @@
   display: block;
   margin-top: 7px;
   width: 100%;
+}
+
+.competency-planner {
+  background: #f8f9fc;
+  border: 1px solid #e8ebf1;
+  border-radius: 9px;
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 14px;
+}
+
+.competency-planner label {
+  color: #4a5368;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.competency-planner textarea {
+  background: #fff;
+  border: 1px solid #e1e3e7;
+  border-radius: 7px;
+  color: #273149;
+  font: inherit;
+  font-size: 11px;
+  padding: 10px;
+  resize: vertical;
+  width: 100%;
+}
+
+.competency-planner p {
+  color: #818795;
+  font-size: 10px;
+  line-height: 1.5;
+  margin: 0 0 5px;
+}
+
+.lesson-generation-controls {
+  border-bottom: 1px solid #e9ebef;
+  padding: 18px 0;
+}
+
+.lesson-generation-controls .api-error {
+  margin-bottom: 0;
+}
+
+.generated-lesson {
+  background: #f8f9fc;
+  border: 1px solid #e4e8f0;
+  border-radius: 9px;
+  margin-top: 18px;
+  padding: 16px;
+}
+
+.generated-lesson h3 {
+  color: #3e485f;
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.generated-lesson p,
+.generated-lesson li {
+  color: #727b8d;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.generated-lesson pre {
+  background: #fff;
+  border: 1px solid #e9ebef;
+  border-radius: 7px;
+  color: #3d4658;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  padding: 13px;
+  white-space: pre-wrap;
+}
+
+.generated-lesson ul {
+  margin-bottom: 0;
+  padding-left: 18px;
 }
 
 .lesson-title {
