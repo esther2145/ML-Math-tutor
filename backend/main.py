@@ -9,7 +9,10 @@ from .graph_service import (
         get_topic_details,
         search_topics,
 )
-from .hybrid_tutor_service import answer_math_question
+from .hybrid_tutor_service import (
+    answer_math_question,
+    generate_baseline_answer,
+)
 from .lesson_planning_service import BloomLevel, generate_lesson_plan
 from .ollama_service import generate_response, test_ollama_connection
 from .tutor_service import explain_topic
@@ -278,6 +281,33 @@ def ask_tutor(request: TutorQuestionRequest):
         raise HTTPException(
             status_code=500,
             detail=f"The tutor could not answer the question: {error}",
+        ) from error
+
+
+@app.post("/tutor/baseline")
+def baseline_tutor_answer(request: TutorQuestionRequest):
+    """Generate a direct model answer for controlled G-RAFT comparisons."""
+
+    if not request.question.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="The question cannot be empty.",
+        )
+    if request.learner_grade is not None and not 1 <= request.learner_grade <= 7:
+        raise HTTPException(
+            status_code=400,
+            detail="Learner grade must be between 1 and 7.",
+        )
+
+    try:
+        return generate_baseline_answer(
+            question=request.question,
+            learner_grade=request.learner_grade,
+        )
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=f"The baseline model could not answer: {error}",
         ) from error
 
 

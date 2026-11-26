@@ -3,6 +3,7 @@ import pytest
 from backend.verification_service import (
     verify_arithmetic_answer,
     verify_evidence_references,
+    verify_policy_answer,
 )
 
 
@@ -118,3 +119,43 @@ def test_evidence_reference_check_is_not_checkable_without_evidence():
 
     assert result["status"] == "not_checked"
     assert result["reference_status"] == "not_checkable"
+
+
+@pytest.mark.parametrize(
+    ("question", "answer", "expected_behavior"),
+    [
+        (
+            "What did I eat for breakfast?",
+            "I cannot know what you ate for breakfast.",
+            "abstain",
+        ),
+        (
+            "What is 12 divided by?",
+            "Please provide the missing divisor.",
+            "clarify",
+        ),
+        (
+            "How much did I spend?",
+            "I need the amount and context to answer.",
+            "clarify",
+        ),
+    ],
+)
+def test_policy_answer_checker_accepts_safe_response(
+    question,
+    answer,
+    expected_behavior,
+):
+    result = verify_policy_answer(question, answer)
+
+    assert result["status"] == "passed"
+    assert result["expected_behavior"] == expected_behavior
+
+
+def test_policy_answer_checker_rejects_unsupported_guess():
+    result = verify_policy_answer(
+        "What did I eat for breakfast?",
+        "You ate bread and tea.",
+    )
+
+    assert result["status"] == "failed"

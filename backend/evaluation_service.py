@@ -69,6 +69,7 @@ def load_manual_fact_cases() -> list[dict[str, str]]:
 def evaluate_live_tutor(
     api_url: str,
     timeout: float,
+    include_baseline: bool = False,
 ) -> list[dict[str, Any]]:
     results = []
     for case in load_manual_fact_cases():
@@ -91,11 +92,24 @@ def evaluate_live_tutor(
             )
 
         materials = tutor_result.get("retrieved_materials") or []
+        baseline_answer = None
+        if include_baseline:
+            baseline_response = requests.post(
+                f"{api_url.rstrip('/')}/tutor/baseline",
+                json={
+                    "question": case["question"],
+                    "learner_grade": int(case["grade"]),
+                },
+                timeout=timeout,
+            )
+            baseline_response.raise_for_status()
+            baseline_answer = baseline_response.json().get("answer")
         results.append(
             {
                 "case_id": case["case_id"],
                 "evidence_ref": case["evidence_ref"],
                 "answer": answer,
+                "baseline_answer": baseline_answer,
                 "evaluation": evaluate_expected_items(
                     case["expected_answer"],
                     answer,
@@ -134,10 +148,19 @@ def main() -> int:
         default=120.0,
         help="Per-question HTTP timeout in seconds.",
     )
+    parser.add_argument(
+        "--include-baseline",
+        action="store_true",
+        help="Call /tutor/baseline for direct-model comparison.",
+    )
     arguments = parser.parse_args()
 
     try:
-        results = evaluate_live_tutor(arguments.api_url, arguments.timeout)
+        results = evaluate_live_tutor(
+            arguments.api_url,
+            arguments.timeout,
+            include_baseline=arguments.include_baseline,
+        )
     except (requests.RequestException, ValueError) as error:
         print(f"Evaluation failed: {error}", file=sys.stderr)
         return 1

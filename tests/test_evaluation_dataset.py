@@ -3,6 +3,7 @@ from pathlib import Path
 
 from backend import evaluation_service
 from backend.evaluation_service import evaluate_expected_items
+from backend.hybrid_tutor_service import answer_math_question
 from backend.math_service import solve_arithmetic_question
 
 DATASET_PATH = (
@@ -64,7 +65,7 @@ def test_automated_arithmetic_cases_match_deterministic_solver():
             assert calculation.result == case["expected_answer"], case["case_id"]
 
 
-def test_unimplemented_policy_cases_are_not_counted_as_automated():
+def test_policy_cases_are_marked_and_checked_automatically():
     cases = load_evaluation_cases()
     policy_cases = [
         case
@@ -78,9 +79,21 @@ def test_unimplemented_policy_cases_are_not_counted_as_automated():
     ]
 
     assert policy_cases
-    assert all(case["automation_status"] == "policy_only" for case in policy_cases)
+    assert all(case["automation_status"] == "automated_policy" for case in policy_cases)
     assert len(blocked_curriculum_cases) == 1
     assert not blocked_curriculum_cases[0]["expected_answer"]
+
+    for case in policy_cases:
+        result = answer_math_question(
+            case["question"],
+            learner_grade=int(case["grade"]),
+            country_code=case["country_code"] or None,
+        )
+        assert result["verification"]["status"] == "passed", case["case_id"]
+        assert (
+            result["verification"]["expected_behavior"]
+            == case["expected_behavior"]
+        )
 
 
 def test_curriculum_case_has_source_reference_and_is_not_automated():

@@ -176,6 +176,42 @@ def test_arithmetic_verification_failure_is_returned(monkeypatch):
     assert result["verification"]["expected_result"] == "4"
 
 
+def test_baseline_answer_is_marked_unverified(monkeypatch):
+    monkeypatch.setattr(
+        hybrid_tutor_service,
+        "generate_response",
+        lambda prompt: "A direct model answer.",
+    )
+
+    result = hybrid_tutor_service.generate_baseline_answer(
+        "What is 24 / 6?",
+        learner_grade=3,
+    )
+
+    assert result["answer"] == "A direct model answer."
+    assert result["baseline"] is True
+    assert result["verification"]["check"] == "baseline_no_retrieval"
+    assert result["verification"]["status"] == "not_checked"
+
+
+def test_authored_policy_questions_bypass_retrieval_and_are_checked(monkeypatch):
+    def fail_if_called(**_):
+        raise AssertionError("Policy-only questions must not call retrieval")
+
+    monkeypatch.setattr(hybrid_tutor_service, "search_materials", fail_if_called)
+    monkeypatch.setattr(hybrid_tutor_service, "generate_response", fail_if_called)
+
+    result = hybrid_tutor_service.answer_math_question(
+        "What did I eat for breakfast?",
+        learner_grade=4,
+    )
+
+    assert result["verification"]["status"] == "passed"
+    assert result["verification"]["check"] == "response_policy"
+    assert result["verification"]["expected_behavior"] == "abstain"
+    assert "cannot know" in result["answer"]
+
+
 def test_missing_citations_trigger_one_refinement(monkeypatch):
     responses = iter(
         [

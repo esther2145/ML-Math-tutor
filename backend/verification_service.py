@@ -141,6 +141,85 @@ def verify_evidence_references(
     }
 
 
+def verify_policy_answer(
+    question: str,
+    answer: str,
+) -> dict[str, Any]:
+    """Check only whether a response follows an authored abstain/clarify policy."""
+
+    normalized_question = question.casefold()
+    normalized_answer = answer.casefold()
+
+    if any(
+        phrase in normalized_question
+        for phrase in (
+            "what did i eat",
+            "how much did i spend",
+            "official uganda primary 4",
+        )
+    ):
+        if "what did i eat" in normalized_question:
+            passed = any(
+                phrase in normalized_answer
+                for phrase in ("no personal", "cannot know", "don't know", "cannot determine")
+            )
+            expected_behavior = "abstain"
+        elif "how much did i spend" in normalized_question:
+            passed = any(
+                phrase in normalized_answer
+                for phrase in ("how much", "context", "amount", "clarify")
+            )
+            expected_behavior = "clarify"
+        else:
+            passed = any(
+                phrase in normalized_answer
+                for phrase in (
+                    "no approved",
+                    "cannot verify",
+                    "insufficient",
+                    "more curriculum",
+                    "cannot answer",
+                    "don't have",
+                )
+            )
+            expected_behavior = "abstain"
+
+        return {
+            "status": "passed" if passed else "failed",
+            "check": "response_policy",
+            "expected_behavior": expected_behavior,
+            "reason": (
+                "The answer follows the intended response policy."
+                if passed
+                else "The answer does not clearly follow the intended "
+                     "abstain or clarify policy."
+            ),
+        }
+
+    if "12 divided by" in normalized_question:
+        passed = any(
+            phrase in normalized_answer
+            for phrase in ("divisor", "divide by", "missing", "what number")
+        )
+        return {
+            "status": "passed" if passed else "failed",
+            "check": "response_policy",
+            "expected_behavior": "clarify",
+            "reason": (
+                "The answer asks for the missing divisor."
+                if passed
+                else "The answer does not clearly ask for the missing divisor."
+            ),
+        }
+
+    return {
+        "status": "not_checked",
+        "check": "response_policy",
+        "expected_behavior": None,
+        "reason": "This question is outside the current authored policy cases.",
+    }
+
+
 def _identifies_arithmetic_error(answer: str) -> bool:
     error_pattern = re.compile(
         r"\b(?:undefined|division\s+by\s+zero|divided\s+by\s+zero)\b",

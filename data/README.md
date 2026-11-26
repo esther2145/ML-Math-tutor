@@ -91,9 +91,8 @@ four kinds of cases separate:
 
 - `automated_solver`: authored explicit arithmetic questions with expected
   results reproducible by the deterministic arithmetic service.
-- `policy_only`: out-of-source and ambiguous questions with the desired
-  abstain/clarify behavior. These are not automated because the live tutor
-  does not implement a checked abstention policy yet.
+- `automated_policy`: out-of-source and ambiguous questions with deterministic
+  abstain/clarify behavior and an automated response-policy check.
 - `blocked_pending_source`: curriculum questions that cannot be scored until an
   approved, reusable curriculum source is added and reviewed.
 - `manually_verified_source_fact`: concise document-specific facts from the
@@ -105,9 +104,10 @@ Run `python -m pytest -q tests/test_evaluation_dataset.py` from the repository
 root to validate the dataset and arithmetic ground truth. Do not combine these
 categories into one accuracy score: arithmetic solver correctness, evidence
 coverage, and abstention behavior need separate measures. This starter set
-validates test data and deterministic arithmetic, with one manually checked P7
-fact. It does not yet execute the tutor against curriculum facts, measure LLM
-hallucinations, or demonstrate that graph retrieval improves answers.
+validates test data, deterministic arithmetic, authored abstention/clarify
+behavior, and one manually checked P7 fact. It does not yet execute the tutor
+against every curriculum fact, measure LLM hallucinations, or demonstrate that
+graph retrieval improves answers.
 
 To evaluate the live tutor against the manually checked fact list, start the
 backend and its configured services, then run

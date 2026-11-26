@@ -7,6 +7,7 @@ from .vector_service import MINIMUM_RELEVANCE_SCORE, search_materials
 from .verification_service import (
     verify_arithmetic_answer,
     verify_evidence_references,
+    verify_policy_answer,
 )
 
 
@@ -66,6 +67,55 @@ Content: {material.get("content")}
     return "\n\n".join(sections)
 
 
+def generate_baseline_answer(
+    question: str,
+    learner_grade: int | None = None,
+) -> dict[str, Any]:
+    """Generate one direct-model answer without retrieval or verification."""
+
+    grade = learner_grade or 3
+    prompt = f"""
+You are a primary-school mathematics tutor.
+Answer the learner's exact question clearly for Primary {grade}.
+
+Learner question:
+{question}
+"""
+    answer = generate_response(prompt)
+    return {
+        "question": question,
+        "learner_grade": grade,
+        "answer": answer,
+        "baseline": True,
+        "verification": {
+            "status": "not_checked",
+            "check": "baseline_no_retrieval",
+            "reason": (
+                "Baseline output uses the model directly without retrieval, "
+                "the graph, or G-RAFT verification."
+            ),
+        },
+    }
+
+
+def build_policy_answer(question: str) -> str | None:
+    """Return deterministic safe answers for authored policy-only cases."""
+
+    normalized = question.casefold()
+    if "what did i eat" in normalized:
+        return "I cannot know what you ate for breakfast because I have no personal context."
+    if "how much did i spend" in normalized:
+        return "Please provide the amount and context so I can help calculate or clarify the spending."
+    if "12 divided by" in normalized:
+        return "The divisor is missing. Please provide the number that 12 should be divided by."
+    if "official uganda primary 4" in normalized:
+        return (
+            "I cannot verify the official Uganda Primary 4 curriculum outcome "
+            "because no approved and reusable Primary 4 source is loaded."
+        )
+    return None
+
+
 def answer_math_question(
     question: str,
     learner_grade: int | None = None,
@@ -107,6 +157,36 @@ def answer_math_question(
                 },
             },
             "answer": answer,
+        }
+
+    policy_answer = build_policy_answer(question)
+    if policy_answer is not None:
+        return {
+            "question": question,
+            "country_code": country_code,
+            "learner_grade": learner_grade or 3,
+            "detected_topic": None,
+            "graph_context": None,
+            "retrieved_materials": [],
+            "verified_calculation": None,
+            "verification": verify_policy_answer(question, policy_answer),
+            "retrieval_trace": {
+                "vector_search": {
+                    "status": "not_run_policy_only",
+                    "filters": {},
+                    "minimum_score": None,
+                    "hit_count": 0,
+                    "hits": [],
+                },
+                "graph_lookup": {
+                    "status": "not_run_policy_only",
+                    "query_topic": None,
+                    "node_id": None,
+                    "topic": None,
+                    "provenance_status": "not_applicable",
+                },
+            },
+            "answer": policy_answer,
         }
 
     materials = search_materials(

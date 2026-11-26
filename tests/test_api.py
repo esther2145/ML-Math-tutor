@@ -68,6 +68,26 @@ def test_tutor_ask_normalizes_and_passes_country_code(monkeypatch):
     assert captured["country_code"] == "UG"
 
 
+def test_baseline_endpoint_returns_unverified_direct_answer(monkeypatch):
+    monkeypatch.setattr(
+        main,
+        "generate_baseline_answer",
+        lambda **_: {
+            "answer": "Direct answer.",
+            "baseline": True,
+            "verification": {"status": "not_checked"},
+        },
+    )
+
+    response = client.post(
+        "/tutor/baseline",
+        json={"question": "What is 24 / 6?", "learner_grade": 3},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["baseline"] is True
+
+
 def test_tutor_ask_rejects_invalid_country_code():
     response = client.post(
         "/tutor/ask",
