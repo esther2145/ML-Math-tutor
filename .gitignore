@@ -65,6 +65,7 @@ qdrant/storage/
 *.seed
 
 # Data, model, and generated artifacts
+data/evaluation_runs/
 
 models/
 checkpoints/

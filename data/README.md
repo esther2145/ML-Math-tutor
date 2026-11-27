@@ -1,9 +1,13 @@
 # Curriculum data and sourcing
 
-The current `curriculum.csv`, `learning_materials.csv`, and `graph_nodes.csv`
-are prototype data. The first two files now mark their records
-`prototype_unverified`; they have no country or source attribution and must not
-be presented as official Ugandan or East African curriculum content.
+The current `curriculum.csv` and `graph_nodes.csv` and the first ten rows of
+`learning_materials.csv` are prototype data. Those starter materials are
+marked `prototype_unverified`; they have no country or source attribution and
+must not be presented as official Ugandan or East African curriculum content.
+One additional Primary Seven fact in `learning_materials.csv` is marked
+`reviewed` for this project only, based on the user-authorized 2012 source and
+manual checking against PDF page 153. This is not an open license or
+redistribution permission.
 
 ## Uganda-first intake
 
@@ -83,11 +87,13 @@ Run `POST /vector/load-materials` after updating the CSV to refresh the Qdrant
 collection. Country-scoped tutor requests use the `country_code` field. The
 legacy graph loader is not yet curriculum-scoped; country-scoped requests
 therefore do not use its graph context until that graph data model is updated.
+The manually checked P7 fact is included as one reviewed retrieval record for
+the limited paired pilot; retain its project-only reuse restriction.
 
 ## Initial hallucination-evaluation set
 
 `evaluation_cases.csv` is the first small, traceable evaluation set. It keeps
-four kinds of cases separate:
+these kinds of cases separate:
 
 - `automated_solver`: authored explicit arithmetic questions with expected
   results reproducible by the deterministic arithmetic service.
@@ -99,15 +105,21 @@ four kinds of cases separate:
   user-authorized P7 2012 PDF, manually checked against a pinpoint page. These
   describe that edition only; they must not be presented as current curriculum
   without newer evidence.
+- `pending_independent_review`: draft P7 source questions and expected answers
+  prepared from extracted PDF text. They are not independently verified and
+  are deliberately excluded from live evaluation. Check each cited page and
+  have another reviewer confirm it before changing the status to
+  `manually_verified_source_fact`. These drafts describe the 2012 edition only.
 
 Run `python -m pytest -q tests/test_evaluation_dataset.py` from the repository
 root to validate the dataset and arithmetic ground truth. Do not combine these
 categories into one accuracy score: arithmetic solver correctness, evidence
 coverage, and abstention behavior need separate measures. This starter set
 validates test data, deterministic arithmetic, authored abstention/clarify
-behavior, and one manually checked P7 fact. It does not yet execute the tutor
-against every curriculum fact, measure LLM hallucinations, or demonstrate that
-graph retrieval improves answers.
+behavior, one manually checked P7 fact, and four provisional P7 cases. The
+provisional cases are not included in live evaluation until independently
+reviewed. This set does not measure general LLM hallucinations or demonstrate
+that graph retrieval improves answers.
 
 To evaluate the live tutor against the manually checked fact list, start the
 backend and its configured services, then run
@@ -119,6 +131,41 @@ the answer; it does not detect unsupported extra claims or prove that retrieved
 sources support the answer. Keep this score separate from arithmetic and
 citation-reference checks. The current P7 case describes the supplied 2012
 document only.
+
+### Paired baseline pilot
+
+For a small controlled comparison, start FastAPI, Qdrant, and Ollama, then run:
+
+```powershell
+python -m backend.evaluation_service --paired --output-dir data/evaluation_runs/pilot-01
+```
+
+Before the first run after adding the P7 record, refresh Qdrant:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/vector/load-materials
+```
+
+The command runs each eligible authored case through both `/tutor/baseline`
+(direct model) and `/tutor/ask` (G-RAFT), using the same question, grade, and
+configured model. It writes:
+
+- `paired_outputs.csv`: identifiable paired outputs and narrow automatic checks.
+- `automatic_summary.json`: separate arithmetic, policy, and expected-item
+  coverage summaries. These are not an overall hallucination metric.
+- `blinded_review_sheet.csv`: response A/B with gold fact/source information.
+- `reviewer_1_template.csv` and `reviewer_2_template.csv`: independent copies
+  for reviewers to rate factuality, unsupported claims, grade appropriateness,
+  and helpfulness.
+- `condition_key_private.csv`: identifies which response is baseline or G-RAFT.
+  Keep this file from reviewers until their independent ratings are complete.
+
+Have two reviewers independently complete separate templates, resolve
+disagreements against the cited source, and retain the original ratings. This
+small current set is only a pilot; it is insufficient for a generalizable
+hallucination-reduction claim. Expand source-grounded cases and obtain
+curriculum/teacher review before drawing broader conclusions. Do not silently
+drop failed requests or abstentions; document them as outcomes.
 
 ## Inspecting runtime retrieval
 

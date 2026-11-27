@@ -97,6 +97,18 @@ pytest
 ruff check .
 ```
 
+For a paired preliminary comparison of the direct model and G-RAFT, start
+FastAPI and its configured services, then run:
+
+```powershell
+python -m backend.evaluation_service --paired --output-dir data/evaluation_runs/pilot-01
+```
+
+The command creates paired answers, narrow automatic checks, blinded reviewer
+templates, and a private condition key. Follow the review protocol and
+interpretation limits in `data/README.md`; passing software tests or citation
+checks does not establish a reduction in hallucinations.
+
 ## Docker troubleshooting on Windows
 
 If Docker reports access denied for the named pipe or `.docker/config.json`,
